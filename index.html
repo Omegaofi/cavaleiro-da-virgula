@@ -306,6 +306,7 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
       <p class="lead">Cartões para guardar na cabeça as referências que servem de coringa na redação. Você lê um cartão novo, tenta lembrar sem olhar e se avalia. O jogo repete cada cartão em 1, 3, 7, 15 e 30 dias, até virar memória. São até 5 cartões novos por dia.</p>
       <dl class="facts" id="memprog"></dl>
       <div class="actions" id="memactions">
+        <label class="fld">Tipo de referência <select id="memtipo"><option value="">Tudo</option><option value="pop">Cultura pop (animes, mangás, jogos, filmes, livros)</option><option value="classico">Clássicos, pensadores e leis</option></select></label>
         <button class="btn" id="memstart" type="button">Começar sessão</button>
         <button class="btn ghost" id="memmap" type="button">Referências por tema</button>
         <button class="btn ghost" id="memback" type="button">Mapa</button>
@@ -320,7 +321,7 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
       <div id="coribrowse">
         <dl class="facts" id="coriprog"></dl>
         <label class="fld">Filtrar por tema <select id="coritema"></select></label>
-        <label class="fld">Filtrar por parte <select id="coriparte"><option value="">Tudo</option><option value="rep">Repertórios</option><option value="intro">Introdução</option><option value="dev">Desenvolvimento</option><option value="conc">Conclusão</option></select></label>
+        <label class="fld">Filtrar por parte <select id="coriparte"><option value="">Tudo</option><option value="rep">Repertórios</option><option value="intro">Introdução</option><option value="dev">Desenvolvimento</option><option value="conc">Conclusão</option><option value="pop">Cultura pop</option></select></label>
         <div class="realms" id="corilist"></div>
       </div>
       <div id="coriview" hidden></div>
@@ -1051,6 +1052,133 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
       conecta: { 2: 'De modo semelhante, o uso excessivo das redes sociais afasta os jovens do convívio real e agrava problemas como a ansiedade.',
                  0: 'Da mesma forma, a relação de dependência com a inteligência artificial pode afastar o estudante do convívio e do pensamento próprio.' },
       palavras: ['Her', 'Spike Jonze'], ideia: ['sistema operacional', 'isola', 'máquina', 'relações'] },
+    /* ---------- cultura pop: animes, mangás, jogos, filmes, séries e livros de fantasia ---------- */
+    { id: 'billybat', pop: true, tipo: 'Mangá', titulo: 'Billy Bat', fonte: 'Naoki Urasawa e Takashi Nagasaki, 2008',
+      apresenta: 'No mangá Billy Bat, escrito por Naoki Urasawa e Takashi Nagasaki e publicado de 2008 a 2016, o quadrinista Kevin Yamagata cria, em 1949, um detetive morcego.',
+      explica: 'Ele descobre que pode ter copiado o personagem de uma imagem antiga e, ao investigar, encontra uma conspiração em que a figura do morcego aparece ligada a momentos decisivos da história.',
+      conecta: { 1: 'Nesse sentido, assim como em Billy Bat, em que um símbolo se espalha e influencia a história sem que ninguém questione sua origem, as fake news ganham força quando ninguém verifica a fonte.',
+                 0: 'Da mesma forma, quando o estudante entrega à IA o trabalho de criar, ele pode copiar ideias sem saber a origem, como o protagonista que teme ter plagiado o morcego.' },
+      palavras: ['Billy Bat', 'Urasawa', 'Kevin Yamagata'], ideia: ['morcego', 'conspiração', 'quadrinista', 'copiou', 'copiar'] },
+    { id: 'deathnote', pop: true, tipo: 'Mangá', titulo: 'Death Note', fonte: 'Tsugumi Ohba e Takeshi Obata, 2003',
+      apresenta: 'No mangá Death Note, escrito por Tsugumi Ohba e desenhado por Takeshi Obata entre 2003 e 2006, o estudante Light Yagami encontra um caderno que mata quem tiver o nome escrito nele.',
+      explica: 'Convencido de que faz justiça, Light passa a julgar quem merece morrer, e a história questiona o perigo de uma só pessoa decidir o que é certo sem ser contestada.',
+      conecta: { 0: 'Da mesma forma, entregar decisões a uma tecnologia como a IA sem discutir seus critérios pode concentrar poder em quem a controla e enfraquecer o senso crítico.',
+                 1: 'Analogamente, quem decide sozinho o que é verdade nas redes, sem checagem, assume o papel de juiz da informação, como Light.' },
+      palavras: ['Death Note', 'Light Yagami', 'Ohba'], ideia: ['caderno', 'justiça', 'Kira', 'julgar'] },
+    { id: 'psychopass', pop: true, tipo: 'Anime', titulo: 'Psycho-Pass', fonte: 'Fuji TV, 2012',
+      apresenta: 'No anime Psycho-Pass, exibido a partir de 2012, o Sistema Sibyl mede continuamente o estado mental dos cidadãos e calcula um índice que indica o risco de cometerem crimes.',
+      explica: 'A sociedade passa a obedecer ao algoritmo, que chega a influenciar educação, carreira e relações, e a trama questiona se alguém ainda pensa por conta própria.',
+      conecta: { 0: 'Nesse sentido, delegar decisões a um sistema automático, como a IA, sem questionar seus critérios ameaça a autonomia e o senso crítico dos estudantes.',
+                 2: 'Da mesma forma, a medição constante de desempenho e de comportamento nas redes sociais pressiona os jovens e agrava a ansiedade.' },
+      palavras: ['Psycho-Pass', 'Sibyl'], ideia: ['algoritmo', 'mede', 'índice', 'Sibyl', 'obedece'] },
+    { id: 'aot', pop: true, tipo: 'Mangá', titulo: 'Attack on Titan', fonte: 'Hajime Isayama, 2009',
+      apresenta: 'No mangá Attack on Titan, de Hajime Isayama, publicado de 2009 a 2021, a humanidade vive cercada por muralhas que a protegem de gigantes.',
+      explica: 'Ao longo da história, os personagens descobrem que parte do que sabiam era escondido e manipulado, o que mostra o perigo de viver sem acesso a informações verdadeiras.',
+      conecta: { 1: 'Da mesma forma, quem vive cercado por boatos e informações falsas fica preso dentro de muralhas e não conhece a realidade dos fatos.',
+                 3: 'Nesse sentido, a falta de acesso à internet e à informação mantém parte da população atrás de muralhas, longe das oportunidades.' },
+      palavras: ['Attack on Titan', 'Shingeki no Kyojin', 'Isayama'], ideia: ['muralhas', 'gigantes', 'escondido', 'manipulad', 'verdade'] },
+    { id: 'naruto', pop: true, tipo: 'Mangá', titulo: 'Naruto', fonte: 'Masashi Kishimoto, 1999',
+      apresenta: 'No mangá Naruto, escrito por Masashi Kishimoto e publicado de 1999 a 2014, o garoto Naruto cresce isolado e rejeitado pela vila onde vive.',
+      explica: 'Com esforço e o apoio de amigos e professores, ele supera a solidão e conquista o reconhecimento de todos, o que mostra o peso do acolhimento na formação de uma pessoa.',
+      conecta: { 2: 'Nesse sentido, o isolamento vivido por Naruto lembra o de jovens que se sentem sozinhos mesmo conectados nas redes sociais, e mostra que o apoio de amigos e da escola ajuda a proteger a saúde mental.' },
+      palavras: ['Naruto', 'Kishimoto'], ideia: ['isolad', 'rejeitad', 'solidão', 'amigos', 'reconhecimento'] },
+    { id: 'eva', pop: true, tipo: 'Anime', titulo: 'Neon Genesis Evangelion', fonte: 'Hideaki Anno, 1995',
+      apresenta: 'No anime Neon Genesis Evangelion, criado por Hideaki Anno e exibido em 1995, o adolescente Shinji é obrigado a pilotar um robô gigante para defender a humanidade.',
+      explica: 'Inseguro e carente de afeto, ele convive com a solidão e a ansiedade, e a série trata de forma direta de depressão e de dificuldade de se relacionar.',
+      conecta: { 2: 'Nesse sentido, a pressão sobre Shinji se parece com a cobrança vivida por muitos adolescentes, que pode agravar a ansiedade e o isolamento.' },
+      palavras: ['Evangelion', 'Hideaki Anno', 'Shinji'], ideia: ['solidão', 'ansiedade', 'depressão', 'pilotar', 'afeto'] },
+    { id: 'mha', pop: true, tipo: 'Mangá', titulo: 'My Hero Academia', fonte: 'Kohei Horikoshi, 2014',
+      apresenta: 'No mangá My Hero Academia, de Kohei Horikoshi, publicado a partir de 2014, a maior parte da população nasce com superpoderes, e o jovem Midoriya nasce sem eles.',
+      explica: 'Mesmo assim, ele entra em uma escola que forma heróis profissionais e mostra que dedicação e boa formação podem superar uma desvantagem de origem.',
+      conecta: { 5: 'Dessa forma, assim como a escola de heróis do mangá, a educação técnica forma profissionais e abre portas no mercado de trabalho para quem se dedica.',
+                 3: 'Nesse sentido, a desigualdade de acesso à tecnologia cria uma diferença de origem que só a educação de qualidade e o acesso à internet podem reduzir.' },
+      palavras: ['My Hero Academia', 'Boku no Hero', 'Horikoshi', 'Midoriya'], ideia: ['superpoderes', 'Midoriya', 'escola', 'heróis', 'desvantagem'] },
+    { id: 'gits', pop: true, tipo: 'Mangá', titulo: 'Ghost in the Shell', fonte: 'Masamune Shirow, 1989',
+      apresenta: 'No mangá Ghost in the Shell, de Masamune Shirow, publicado em 1989, e no filme de 1995, humanos têm corpos e cérebros ligados a redes e máquinas.',
+      explica: 'A história questiona onde termina a consciência humana e começa a máquina, e o que resta de próprio em quem tem a mente conectada a sistemas.',
+      conecta: { 0: 'Da mesma forma, quando a inteligência artificial passa a pensar pelos estudantes, surge a dúvida sobre o que é do aluno e o que é da máquina, e a escola precisa preservar a autoria do pensamento.' },
+      palavras: ['Ghost in the Shell', 'Masamune Shirow'], ideia: ['consciência', 'máquina', 'mente', 'redes'] },
+    { id: 'coraline', pop: true, tipo: 'Livro', titulo: 'Coraline', fonte: 'Neil Gaiman, 2002',
+      apresenta: 'No livro Coraline, publicado por Neil Gaiman em 2002, uma menina atravessa uma porta secreta e encontra um mundo parecido com o dela, onde tudo parece perfeito.',
+      explica: 'Nesse mundo, a Outra Mãe a agrada o tempo todo, mas quer prendê-la costurando botões em seus olhos, e Coraline percebe que o que parecia ideal era uma armadilha.',
+      conecta: { 4: 'Da mesma forma, as telas oferecem um mundo sempre agradável e sem esforço, mas prendem a atenção dos jovens e reduzem a concentração e o contato com a vida real.',
+                 2: 'Nesse sentido, o mundo editado das redes sociais parece perfeito, mas pode aprisionar os jovens na comparação e agravar a ansiedade.' },
+      palavras: ['Coraline', 'Gaiman'], ideia: ['Outra Mãe', 'botões', 'armadilha', 'perfeito', 'porta'] },
+    { id: 'hobbit', pop: true, tipo: 'Livro', titulo: 'O Hobbit', fonte: 'J. R. R. Tolkien, 1937',
+      apresenta: 'No livro O Hobbit, publicado por J. R. R. Tolkien em 1937, o hobbit Bilbo Bolseiro deixa o conforto de casa para acompanhar anões em uma jornada perigosa.',
+      explica: 'Ao longo do caminho, ele descobre habilidades que nem imaginava ter, como a coragem e a astúcia, e amadurece ao conviver com outros personagens.',
+      conecta: { 5: 'Do mesmo modo, a educação técnica forma o jovem pela prática e o prepara para os desafios reais do mercado de trabalho.',
+                 2: 'Da mesma forma, a coragem de Bilbo nasce do convívio com outros personagens, o que mostra que os laços reais protegem a saúde mental dos jovens contra o isolamento das redes sociais.' },
+      palavras: ['O Hobbit', 'Hobbit', 'Tolkien', 'Bilbo'], ideia: ['coragem', 'jornada', 'astúcia', 'amadurece', 'Bilbo'] },
+    { id: 'narnia', pop: true, tipo: 'Livro', titulo: 'O Leão, a Feiticeira e o Guarda-Roupa', fonte: 'C. S. Lewis, 1950',
+      apresenta: 'No livro O Leão, a Feiticeira e o Guarda-Roupa, publicado por C. S. Lewis em 1950, quatro irmãos atravessam um guarda-roupa e chegam a Nárnia, um reino dominado por uma feiticeira.',
+      explica: 'Eles percebem que a feiticeira mantém o reino em um inverno eterno, e é a união e a coragem das crianças que ajudam a devolver a liberdade ao povo.',
+      conecta: { 1: 'Analogamente, assim como o inverno de Nárnia escondia a verdade sobre o reino, a desinformação esconde os fatos da população, e só a coragem de verificar devolve a clareza.',
+                 2: 'Da mesma forma, a união entre os irmãos mostra que o apoio de pessoas próximas ajuda a enfrentar o isolamento e a proteger a saúde mental dos jovens.' },
+      palavras: ['Nárnia', 'Narnia', 'C. S. Lewis', 'Guarda-Roupa'], ideia: ['inverno', 'feiticeira', 'guarda-roupa', 'irmãos', 'coragem'] },
+    { id: 'harrypotter', pop: true, tipo: 'Livro', titulo: 'Harry Potter e a Pedra Filosofal', fonte: 'J. K. Rowling, 1997',
+      apresenta: 'No livro Harry Potter e a Pedra Filosofal, publicado por J. K. Rowling em 1997, um menino órfão descobre aos onze anos que é bruxo e vai estudar em Hogwarts.',
+      explica: 'Na escola, ele recebe uma formação que revela seu talento, o que mostra como o acesso à educação pode mudar o futuro de quem vivia à margem.',
+      conecta: { 5: 'Dessa forma, assim como Hogwarts forma bruxos habilidosos, a educação técnica e tecnológica qualifica os jovens e transforma suas oportunidades de trabalho.',
+                 3: 'Nesse sentido, o acesso a uma boa escola e à tecnologia deve chegar a todos, e não depender da origem de cada aluno, para reduzir a desigualdade.' },
+      palavras: ['Harry Potter', 'Rowling', 'Hogwarts'], ideia: ['órfão', 'bruxo', 'Hogwarts', 'escola', 'talento'] },
+    { id: 'jogosvorazes', pop: true, tipo: 'Livro', titulo: 'Jogos Vorazes', fonte: 'Suzanne Collins, 2008',
+      apresenta: 'No livro Jogos Vorazes, publicado por Suzanne Collins em 2008, jovens de distritos pobres são obrigados a lutar em um espetáculo transmitido para a elite da Capital.',
+      explica: 'A obra mostra uma sociedade extremamente desigual, em que a mídia entretém os ricos e controla a narrativa enquanto os pobres sofrem.',
+      conecta: { 3: 'Da mesma forma, a desigualdade no acesso à tecnologia separa quem tem oportunidades de quem fica de fora, como os distritos pobres da obra.',
+                 1: 'Nesse sentido, o controle da narrativa pela Capital lembra como a desinformação pode manipular a opinião pública quando poucos controlam a informação.' },
+      palavras: ['Jogos Vorazes', 'Suzanne Collins', 'Hunger Games'], ideia: ['distritos', 'espetáculo', 'Capital', 'desigual', 'mídia'] },
+    { id: 'jogador1', pop: true, tipo: 'Livro', titulo: 'Jogador Número 1', fonte: 'Ernest Cline, 2011',
+      apresenta: 'No livro Jogador Número 1, publicado por Ernest Cline em 2011, a maioria das pessoas foge de um mundo ruim e passa a maior parte do tempo em um universo virtual chamado OASIS.',
+      explica: 'Ao longo da história, o protagonista percebe que a realidade, apesar de difícil, é o único lugar onde a vida acontece de verdade.',
+      conecta: { 4: 'Da mesma forma, o excesso de tempo em mundos virtuais e telas afasta os jovens da vida real e reduz a concentração nos estudos.',
+                 2: 'Nesse sentido, o escapismo digital pode funcionar como fuga de problemas emocionais, o que agrava a ansiedade e o isolamento dos jovens.' },
+      palavras: ['Jogador Número 1', 'Ready Player One', 'Ernest Cline', 'OASIS'], ideia: ['virtual', 'OASIS', 'realidade', 'fuga'] },
+    { id: 'divertidamente', pop: true, tipo: 'Filme', titulo: 'Divertida Mente', fonte: 'Pixar, 2015',
+      apresenta: 'No filme Divertida Mente, lançado pela Pixar em 2015, as emoções de uma menina, como Alegria e Tristeza, comandam suas decisões.',
+      explica: 'A história mostra que a tristeza também é necessária para lidar com os problemas, e que esconder os sentimentos prejudica o bem-estar.',
+      conecta: { 2: 'Nesse sentido, o filme mostra que reconhecer a tristeza faz parte da saúde mental, o que contrasta com a imagem de felicidade constante que as redes sociais cobram dos jovens.' },
+      palavras: ['Divertida Mente', 'Inside Out'], ideia: ['emoções', 'Tristeza', 'Alegria', 'sentimentos'] },
+    { id: 'homemaranha', pop: true, tipo: 'Quadrinhos', titulo: 'Homem-Aranha', fonte: 'Stan Lee e Steve Ditko, 1962',
+      apresenta: 'Nos quadrinhos do Homem-Aranha, criados por Stan Lee e Steve Ditko em 1962, o jovem Peter Parker aprende que “com grandes poderes vêm grandes responsabilidades”.',
+      explica: 'A frase mostra que quem tem poder, seja de força ou de influência, precisa responder pelas consequências de suas escolhas.',
+      conecta: { 1: 'Dessa forma, quem tem alcance nas redes sociais tem a responsabilidade de checar a informação antes de compartilhar, para não espalhar notícias falsas.',
+                 0: 'Da mesma forma, o grande poder da inteligência artificial exige que empresas, escolas e estudantes usem a tecnologia com responsabilidade.' },
+      palavras: ['Homem-Aranha', 'Stan Lee', 'Peter Parker'], ideia: ['responsabilidade', 'poder', 'consequências'] },
+    { id: 'round6', pop: true, tipo: 'Série', titulo: 'Round 6', fonte: 'Hwang Dong-hyuk, 2021',
+      apresenta: 'Na série Round 6, criada por Hwang Dong-hyuk e lançada pela Netflix em 2021, pessoas endividadas aceitam participar de jogos mortais por um prêmio em dinheiro.',
+      explica: 'A trama mostra como a desigualdade e a falta de oportunidades empurram pessoas para escolhas extremas.',
+      conecta: { 3: 'Nesse sentido, a desigualdade de acesso à tecnologia e à educação reduz as oportunidades de quem já está em desvantagem e aprofunda a exclusão.',
+                 5: 'Dessa forma, a educação técnica amplia as chances de trabalho e de renda, e reduz a dependência de saídas desesperadas.' },
+      palavras: ['Round 6', 'Squid Game', 'Hwang Dong-hyuk'], ideia: ['endividad', 'jogos', 'prêmio', 'desigualdade'] },
+    { id: 'celeste', pop: true, tipo: 'Jogo', titulo: 'Celeste', fonte: 'Matt Thorson, 2018',
+      apresenta: 'No jogo Celeste, lançado em 2018 e criado por Matt Thorson, a jovem Madeline sobe uma montanha enquanto enfrenta a própria ansiedade e depressão.',
+      explica: 'A montanha simboliza as dificuldades emocionais dela, e o jogo mostra que aceitar as próprias fragilidades faz parte de superar a doença.',
+      conecta: { 2: 'Dessa forma, o jogo mostra que a ansiedade e a depressão podem ser enfrentadas com acolhimento, o que reforça a necessidade de atendimento psicológico para os jovens.' },
+      palavras: ['Celeste', 'Madeline', 'Matt Thorson'], ideia: ['montanha', 'ansiedade', 'depressão', 'Badeline'] },
+    { id: 'cid11jogos', pop: true, tipo: 'Pesquisa', titulo: 'Transtorno de jogos eletrônicos (CID-11)', fonte: 'OMS, 2019',
+      apresenta: 'Em 2019, a Organização Mundial da Saúde incluiu o transtorno de jogos eletrônicos na CID-11, que passou a valer em 2022.',
+      explica: 'A OMS descreve o problema pela perda de controle sobre o jogo, pela prioridade dada a ele sobre outras atividades e pela continuação apesar dos prejuízos.',
+      conecta: { 4: 'Nesse sentido, o reconhecimento do vício em jogos como transtorno mostra que o uso excessivo de telas pode prejudicar a concentração e a vida dos jovens.',
+                 2: 'Da mesma forma, a perda de controle sobre o tempo de tela pode agravar a ansiedade e o isolamento dos jovens.' },
+      palavras: ['CID-11', 'transtorno de jogos'], ideia: ['perda de controle', 'prioridade', 'prejuízos', 'jogo'],
+      aviso: 'Jogar muito, por si só, não é diagnóstico: o critério é a perda de controle e o prejuízo na vida.' },
+    { id: 'minecraft', pop: true, tipo: 'Jogo', titulo: 'Minecraft', fonte: 'Mojang, 2011',
+      apresenta: 'No jogo Minecraft, lançado em 2011 pelo estúdio sueco Mojang, os jogadores constroem mundos inteiros com blocos e recursos coletados.',
+      explica: 'O jogo é usado em escolas para ensinar matemática, programação e trabalho em equipe, e mostra que a tecnologia pode estimular a criatividade.',
+      conecta: { 0: 'Da mesma forma, quando bem orientada pela escola, a tecnologia, incluindo a IA, pode estimular a criatividade dos estudantes em vez de substituir o raciocínio.',
+                 5: 'Nesse sentido, ferramentas como o Minecraft ajudam a ensinar programação e lógica, habilidades valorizadas na educação tecnológica e no mercado de trabalho.' },
+      palavras: ['Minecraft', 'Mojang'], ideia: ['blocos', 'construir', 'criatividade', 'programação', 'escolas'] },
+    { id: 'detroit', pop: true, tipo: 'Jogo', titulo: 'Detroit: Become Human', fonte: 'Quantic Dream, 2018',
+      apresenta: 'No jogo Detroit: Become Human, lançado em 2018 pelo estúdio Quantic Dream, androides trabalham para humanos e começam a desenvolver sentimentos e consciência.',
+      explica: 'As escolhas do jogador decidem se as máquinas serão tratadas como objetos ou como seres com direitos, o que levanta debates éticos sobre a inteligência artificial.',
+      conecta: { 0: 'Nesse sentido, o jogo mostra que o avanço da inteligência artificial exige regras éticas e que a escola precisa formar estudantes capazes de discuti-las.' },
+      palavras: ['Detroit: Become Human', 'Quantic Dream', 'Detroit'], ideia: ['androides', 'consciência', 'escolhas', 'ética'] },
+    { id: 'amongus', pop: true, tipo: 'Jogo', titulo: 'Among Us', fonte: 'InnerSloth, 2018',
+      apresenta: 'No jogo Among Us, lançado em 2018 pelo estúdio InnerSloth, tripulantes tentam descobrir quais colegas são impostores que sabotam a nave.',
+      explica: 'Como os impostores mentem e acusam os outros, os jogadores precisam analisar provas e desconfiar de informações sem checagem.',
+      conecta: { 1: 'Da mesma forma, nas redes sociais, é preciso desconfiar de informações sem fonte e fazer a checagem antes de acreditar, para não ser enganado pela desinformação.' },
+      palavras: ['Among Us', 'InnerSloth'], ideia: ['impostores', 'mentem', 'provas', 'desconfiar'] },
     /* ---------- técnicas coringa por parte da redação (conecta: tema -> parágrafo-modelo completo) ---------- */
     { id: 't-intro-hist', tipo: 'Técnica', parte: 'intro', titulo: 'Abertura histórica', fonte: 'Introdução',
       apresenta: 'Comece situando o tema no tempo, com expressões como “Desde”, “Ao longo dos anos” ou “Com o advento de”.',
@@ -1730,7 +1858,7 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
   var GEN_AG = /\b(o governo|a sociedade|todos nós|as autoridades|o estado)\b/i;
   var TOPIC_RE = /^(Em primeiro lugar|Em primeiro plano|Primeiramente|Em segundo lugar|Em segundo plano|Inicialmente|Ademais|Além disso|Nesse sentido|Nesse contexto|Por outro lado|Outrossim|Sobretudo|Dessa forma|Também|Por fim),/;
   var CONCL_RE = /^(Portanto|Em suma|Em síntese|Em conclusão|Logo|Dessa forma|Dessa maneira|Assim|Por fim|Diante disso|Nesse sentido),/;
-  var REPCUE_RE = /\b(filme|livro|obra|documentário|curta|ensaio|conceito|agenda|programa|ONU|OMS|lei|artigo|Constituição|norma|série|animação|romance|pesquisa|segundo|de acordo com|filósofo|revista|IBGE|UNESCO|Orwell|Matrix|Wall-E|Platão|Tolkien|Bauman|dados|estudo|relatório)\b/i;
+  var REPCUE_RE = /\b(filme|livro|obra|mangá|anime|jogo|quadrinhos|Organização Mundial|documentário|curta|ensaio|conceito|agenda|programa|ONU|OMS|lei|artigo|Constituição|norma|série|animação|romance|pesquisa|segundo|de acordo com|filósofo|revista|IBGE|UNESCO|Orwell|Matrix|Wall-E|Platão|Tolkien|Bauman|dados|estudo|relatório)(?![A-Za-zÀ-ú0-9])/i;
   var EXPL_RE = /\b(mostra|mostram|retrata|retratam|apresenta|apresentam|revela|revelam|narra|conta|trama|história|nela|nele|na obra|no filme|no livro|na animação|os dados|a pesquisa|o estudo)\b/i;
   var LINK_RE = /(Da mesma forma|Da mesma maneira|Do mesmo modo|De modo semelhante|Assim como|Analogamente|Dessa forma|Dessa maneira|Logo|Portanto|Nesse sentido|Semelhantemente|Por isso|Assim,)/i;
   var ACAO_RE = /\b(deve|devem|precisa|precisam|cabe|é necessário|é fundamental)\b/i;
@@ -2088,11 +2216,13 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
 
   /* ---------- cofre de coringas: estudar, lembrar de memória e aplicar em um parágrafo ---------- */
   var DAY = 864e5;
+  var POP_IDS = ['matrix', 'walle', 'blackmirror', 'her', 'dilema', 'estrelas'];
   var escRe = function (s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); };
   function prepCori(c) {
     c.reg = c.parte ? new RegExp(c.palavras.map(escRe).join('|'), 'i') : new RegExp('(^|[^A-Za-zÀ-ú0-9])(' + c.palavras.map(escRe).join('|') + ')(?![A-Za-zÀ-ú0-9])', 'i');
     c.idRe = c.ideia.length ? new RegExp(c.ideia.map(escRe).join('|'), 'i') : null;
     c.temas = Object.keys(c.conecta).map(Number);
+    c.pop = c.pop === true || POP_IDS.indexOf(c.id) >= 0;
     return c;
   }
   CORI.forEach(prepCori);
@@ -2118,7 +2248,7 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
     var all = coriAll(), tema = +$('coritema').value, done = 0, rev = 0;
     all.forEach(function (c) { var st = coriStatus(c); if (st === 'aplicado') done++; if (st === 'revisar') rev++; });
     $('coriprog').innerHTML = '<div><dt>Aplicados</dt><dd>' + done + '/' + all.length + '</dd></div><div><dt>Lembrados sem aplicar</dt><dd>' + coriPending() + '/2</dd></div><div><dt>Para revisar</dt><dd>' + rev + '</dd></div>';
-    var pt = $('coriparte').value, list = all.filter(function (c) { return (tema < 0 || c.temas.indexOf(tema) >= 0) && (!pt || (pt === 'rep' ? !c.parte : c.parte === pt)); });
+    var pt = $('coriparte').value, list = all.filter(function (c) { return (tema < 0 || c.temas.indexOf(tema) >= 0) && (!pt || (pt === 'rep' ? !c.parte : pt === 'pop' ? c.pop : c.parte === pt)); });
     $('corilist').innerHTML = list.map(function (c) {
       var st = coriStatus(c), lock = coriLocked(c);
       return '<button type="button" class="realm" data-c="' + esc(c.id) + '"' + (lock ? ' aria-disabled="true"' : '') + '><span class="rt">' + esc(c.titulo) + '</span><span class="rd">' + esc(c.tipo) + ' · ' + esc(c.fonte) + '</span><span class="rb">' +
@@ -2262,11 +2392,11 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
     var have = coriAll().map(function (c) { return c.titulo; }).join('; ');
     return 'Você é meu professor de redação. Responda sempre em português do Brasil, de forma direta e honesta.\n\n' +
       'Preciso de repertórios coringa para a prova de redação do processo seletivo de TADS do IFSul, campus Venâncio Aires: referências que servem para vários temas. Pesquise na web e confirme cada dado (nomes, anos, leis, números) em fontes confiáveis. Não invente nada: se um dado for incerto, deixe de fora ou avise no campo "aviso".\n' +
-      'Traga 6 coringas novos (livros, filmes, pensadores, leis ou pesquisas) diferentes destes, que eu já tenho: ' + have + '.\n\n' +
+      'Traga 6 coringas novos diferentes destes, que eu já tenho: ' + have + '.\nPriorize referências de cultura pop que um jovem brasileiro conhece (animes, mangás, jogos, filmes, séries, quadrinhos e livros de fantasia), sem deixar de fora, de vez em quando, clássicos, pensadores e leis.\n\n' +
       'Temas (número): ' + THEMES.map(function (t, i) { return i + ' = ' + t; }).join('; ') + '.\n\n' +
       'Responda SOMENTE com um JSON válido, sem texto antes ou depois e sem markdown, porque vou colar a resposta num jogo de treino, neste formato:\n' +
       '{"coringas": [{\n' +
-      '  "tipo": "Livro | Filme | Série | Pensador | Lei | Pesquisa",\n' +
+      '  "tipo": "Anime | Mangá | Jogo | Série | Filme | Livro | Quadrinhos | Pensador | Lei | Pesquisa",\n' +
       '  "titulo": "nome curto",\n' +
       '  "fonte": "autor ou órgão, ano",\n' +
       '  "apresenta": "1 frase que apresenta a obra ou o dado, com autor e ano",\n' +
@@ -2274,7 +2404,8 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
       '  "conecta": {"0": "frase que liga ao tema 0", "2": "frase que liga ao tema 2"},\n' +
       '  "palavras": ["nome da obra", "nome do autor"],\n' +
       '  "ideia": ["radicais de palavras da ideia central, como vigi, controle"],\n' +
-      '  "aviso": "cuidado ao usar, se houver, ou texto vazio"\n' +
+      '  "aviso": "cuidado ao usar, se houver, ou texto vazio",\n' +
+      '  "pop": true se for cultura pop (anime, mangá, jogo, série, filme popular, livro de fantasia), false se for clássico, pensador, lei ou pesquisa\n' +
       '}]}\n' +
       'Regras: cada coringa deve ligar a pelo menos 2 temas em "conecta" (chaves de 0 a 5), com frases prontas de redação que comecem com um conectivo seguido de vírgula; "palavras" são os nomes pelos quais eu vou citar a referência; frases curtas, sem erros de português.';
   }
@@ -2285,7 +2416,7 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
       var raw = extractJson(txt), list = Array.isArray(raw.coringas) ? raw.coringas.slice(0, 30) : [], added = 0, dropped = 0, have = coriAll().map(function (c) { return c.titulo.toLowerCase(); });
       list.forEach(function (it) {
         if (!it || typeof it !== 'object') { dropped++; return; }
-        var c = { tipo: cleanStr(it.tipo, 20) || 'Referência', titulo: cleanStr(it.titulo, 80), fonte: cleanStr(it.fonte, 80), apresenta: cleanStr(it.apresenta, 300), explica: cleanStr(it.explica, 300), aviso: cleanStr(it.aviso, 200), conecta: {}, palavras: [], ideia: [] };
+        var c = { tipo: cleanStr(it.tipo, 20) || 'Referência', titulo: cleanStr(it.titulo, 80), fonte: cleanStr(it.fonte, 80), apresenta: cleanStr(it.apresenta, 300), explica: cleanStr(it.explica, 300), aviso: cleanStr(it.aviso, 200), pop: it.pop === true, conecta: {}, palavras: [], ideia: [] };
         var cn = it.conecta && typeof it.conecta === 'object' ? it.conecta : {};
         Object.keys(cn).forEach(function (k) { var n = +k, f = cleanStr(cn[k], 300); if (n >= 0 && n < THEMES.length && Math.floor(n) === n && f.length >= 20) c.conecta[n] = f; });
         c.palavras = (Array.isArray(it.palavras) ? it.palavras : []).map(function (x) { return cleanStr(x, 60); }).filter(Boolean).slice(0, 5);
@@ -2305,7 +2436,7 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
 
   /* ---------- memorizar referências: cartões com revisão espaçada (1, 3, 7, 15 e 30 dias) ---------- */
   var MEMBOX = [0, 1, 3, 7, 15, 30], MEM_NEW = 5, mv = null;
-  function memAll() { return coriAll().filter(function (c) { return !c.parte; }); }
+  function memAll() { var f = save.mem.tipo || ''; return coriAll().filter(function (c) { return !c.parte && (!f || (f === 'pop' ? c.pop : !c.pop)); }); }
   function memCard(id) { return memAll().filter(function (c) { return c.id === id; })[0]; }
   function memToday() { var d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); }
   function memDay() { if (save.mem.day !== memToday()) { save.mem.day = memToday(); save.mem.newN = 0; persist(); } }
@@ -2375,7 +2506,7 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
     }
     el.innerHTML = h;
   }
-  function openMem() { mv = null; renderMem(); show('mem'); }
+  function openMem() { mv = null; $('memtipo').value = save.mem.tipo || ''; $('memmsg').textContent = ''; renderMem(); show('mem'); }
   function memStart() {
     var q = memBuild();
     if (!q.length) { renderMem(); $('memmsg').textContent = 'Nada para revisar agora. Volte amanhã ou adicione mais referências no Cofre de coringas.'; return; }
@@ -2567,6 +2698,7 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
 
   $('mmem').addEventListener('click', openMem);
   $('memback').addEventListener('click', toMenu);
+  $('memtipo').addEventListener('change', function () { save.mem.tipo = $('memtipo').value; persist(); renderMemFacts(); });
   $('memstart').addEventListener('click', memStart);
   $('memmap').addEventListener('click', function () { mv = { view: 'map', tema: 0 }; renderMem(); });
   $('memview').addEventListener('click', function (e) {
