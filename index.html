@@ -251,6 +251,7 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
         </div>
       </fieldset>
       <div class="actions">
+        <button class="btn" id="mcori" type="button">Cofre de coringas</button>
         <button class="btn" id="mplan" type="button">Treino personalizado</button>
         <button class="btn" id="mwrite" type="button">Oficina de parágrafos</button>
         <button class="btn ghost" id="mshop" type="button">Loja e guarda-roupa</button>
@@ -297,6 +298,26 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
         <button class="btn" id="shgo" type="button">Continuar</button>
         <button class="btn ghost" id="shmenu" type="button">Mapa</button>
       </div>
+    </section>
+
+    <section class="panel" id="sc-cori" hidden>
+      <h2>Cofre de coringas</h2>
+      <p class="lead">Repertórios que servem para vários temas. Para cada um: estude, lembre de memória e depois aplique em um parágrafo. Você pode ter no máximo 2 coringas lembrados e ainda não aplicados. Um coringa aplicado volta para revisão depois de alguns dias.</p>
+      <div id="coribrowse">
+        <dl class="facts" id="coriprog"></dl>
+        <label class="fld">Filtrar por tema <select id="coritema"></select></label>
+        <div class="realms" id="corilist"></div>
+      </div>
+      <div id="coriview" hidden></div>
+      <details class="rules">
+        <summary>Trazer mais coringas pesquisados pelo Claude</summary>
+        <p>1) Copie o pedido e cole no Claude. 2) Cole aqui a resposta dele, em JSON.</p>
+        <div class="actions"><button class="btn ghost" id="coricopy" type="button">Copiar pedido</button></div>
+        <textarea class="write mono" id="coriimp" spellcheck="false" aria-label="Coringas em JSON" placeholder="Cole aqui o JSON com os novos coringas."></textarea>
+        <div class="actions"><button class="btn" id="coriadd" type="button">Adicionar coringas</button></div>
+        <p class="hint" id="corimsg" role="status"></p>
+      </details>
+      <div class="actions"><button class="btn ghost" id="coriback" type="button">Mapa</button></div>
     </section>
 
     <section class="panel" id="sc-plan" hidden>
@@ -771,12 +792,116 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
       hint: 'Exatamente 3 frases: apresente a obra ou o dado, explique o que acontece nela e conecte com o tema.',
       checks: ['sents', 'repcue', 'expl', 'link', 'conn', 'spell', 'rep'] }
   };
+  /* ---------- coringas: repertórios que servem para vários temas (conecta: número do tema -> frase) ---------- */
+  var CORI = [
+    { id: '1984', tipo: 'Livro', titulo: '1984', fonte: 'George Orwell, 1949',
+      apresenta: 'No livro 1984, publicado por George Orwell em 1949, o Estado vigia todos os cidadãos e controla a informação.',
+      explica: 'Na obra, o Partido reescreve os fatos e pune quem duvida, de modo que as pessoas aceitam apenas a versão oficial da verdade.',
+      conecta: { 1: 'Assim como na ficção, as fake news atuais manipulam a opinião pública e enfraquecem a capacidade de o cidadão discernir a verdade.',
+                 0: 'Do mesmo modo, quem aceita todas as respostas da inteligência artificial sem questionar abre mão do próprio senso crítico.' },
+      palavras: ['1984', 'Orwell'], ideia: ['vigi', 'controla', 'informaç', 'versão oficial', 'reescrev'] },
+    { id: 'admiravel', tipo: 'Livro', titulo: 'Admirável Mundo Novo', fonte: 'Aldous Huxley, 1932',
+      apresenta: 'No livro Admirável Mundo Novo, publicado por Aldous Huxley em 1932, as pessoas são mantidas satisfeitas por prazer e consumo constantes.',
+      explica: 'Na obra, a distração permanente e o prazer imediato fazem os cidadãos abrirem mão de pensar e de questionar a sociedade.',
+      conecta: { 4: 'Da mesma forma, o uso excessivo de telas oferece prazer imediato e reduz a concentração e o hábito de refletir dos jovens.',
+                 2: 'Analogamente, a busca por aprovação rápida nas redes sociais mantém os jovens distraídos dos próprios problemas emocionais.' },
+      palavras: ['Admirável Mundo Novo', 'Huxley'], ideia: ['prazer', 'distraç', 'consumo', 'questionar'] },
+    { id: 'fahrenheit', tipo: 'Livro', titulo: 'Fahrenheit 451', fonte: 'Ray Bradbury, 1953',
+      apresenta: 'No livro Fahrenheit 451, publicado por Ray Bradbury em 1953, os bombeiros queimam livros e as pessoas vivem presas a telas.',
+      explica: 'Na obra, a sociedade abandona a leitura e o pensamento crítico, preferindo o entretenimento rápido e superficial.',
+      conecta: { 4: 'Da mesma maneira, o excesso de telas afasta os jovens da leitura e reduz a capacidade de concentração.',
+                 0: 'Do mesmo modo, depender de respostas prontas da IA afasta o estudante do esforço de ler e refletir.' },
+      palavras: ['Fahrenheit', 'Bradbury'], ideia: ['livros', 'leitura', 'telas', 'entretenimento'] },
+    { id: 'matrix', tipo: 'Filme', titulo: 'Matrix', fonte: 'Lana e Lilly Wachowski, 1999',
+      apresenta: 'O filme Matrix, lançado em 1999 pelas irmãs Wachowski, mostra humanos presos a uma simulação criada por máquinas.',
+      explica: 'No filme, as pessoas vivem uma realidade falsa sem perceber que seus pensamentos e sua vida são controlados.',
+      conecta: { 0: 'Da mesma forma, quem terceiriza o pensamento à inteligência artificial corre o risco de aceitar respostas prontas sem questionar.',
+                 1: 'Analogamente, as fake news criam uma realidade distorcida em que o cidadão acredita sem verificar.' },
+      palavras: ['Matrix', 'Wachowski'], ideia: ['simulaç', 'realidade', 'máquinas', 'controlad'] },
+    { id: 'walle', tipo: 'Filme', titulo: 'Wall-E', fonte: 'Pixar, 2008',
+      apresenta: 'A animação Wall-E, lançada pela Pixar em 2008, mostra humanos que vivem em uma nave, dependentes de máquinas para todas as tarefas.',
+      explica: 'No filme, as pessoas se tornam sedentárias e deixam de decidir por conta própria, pois a tecnologia resolve tudo por elas.',
+      conecta: { 4: 'Do mesmo modo, o uso excessivo de telas reduz a autonomia e a concentração dos jovens.',
+                 0: 'Da mesma forma, o uso acrítico da IA pode tornar o estudante dependente e pouco autônomo.' },
+      palavras: ['Wall-E', 'Pixar'], ideia: ['dependen', 'sedentári', 'máquinas', 'autonomia'] },
+    { id: 'blackmirror', tipo: 'Série', titulo: 'Black Mirror: Queda Livre', fonte: 'Charlie Brooker, 2016',
+      apresenta: 'No episódio Queda Livre, da série Black Mirror, lançado em 2016, as pessoas avaliam umas às outras com notas que definem seu acesso a bens e oportunidades.',
+      explica: 'Na trama, a protagonista passa a viver para agradar os outros e entra em colapso emocional ao perder pontos.',
+      conecta: { 2: 'Da mesma forma, a busca por curtidas e aprovação nas redes sociais alimenta a comparação e a ansiedade entre os jovens.' },
+      palavras: ['Black Mirror', 'Queda Livre', 'Nosedive'], ideia: ['nota', 'avali', 'aprovaç', 'agradar'],
+      aviso: 'É uma série de ficção. Use para ilustrar uma ideia, não como dado científico.' },
+    { id: 'caverna', tipo: 'Pensador', titulo: 'Alegoria da Caverna', fonte: 'Platão, A República',
+      apresenta: 'Na Alegoria da Caverna, presente em A República, de Platão, prisioneiros acorrentados só enxergam sombras projetadas na parede.',
+      explica: 'Eles acreditam que as sombras são a realidade até que um deles se liberta e descobre o mundo real.',
+      conecta: { 0: 'Analogamente, quem aceita tudo o que a IA responde pode ficar preso a uma visão limitada, sem buscar a verdade por conta própria.',
+                 1: 'Da mesma forma, quem se informa apenas por boatos nas redes vive de sombras e não conhece a realidade dos fatos.' },
+      palavras: ['Caverna', 'Platão'], ideia: ['sombras', 'prisioneiros', 'realidade', 'liberta'] },
+    { id: 'bauman', tipo: 'Pensador', titulo: 'Modernidade Líquida', fonte: 'Zygmunt Bauman, 2000',
+      apresenta: 'Na obra Modernidade Líquida, publicada por Zygmunt Bauman em 2000, o sociólogo afirma que os vínculos humanos se tornaram frágeis e passageiros.',
+      explica: 'Segundo ele, relações, valores e identidades se desmancham como líquidos, o que gera insegurança e instabilidade.',
+      conecta: { 2: 'Nesse sentido, as relações superficiais nas redes sociais ilustram esses vínculos frágeis e contribuem para o isolamento e a ansiedade dos jovens.',
+                 4: 'Da mesma forma, a atenção dispersa entre notificações do celular e das redes sociais reflete uma sociedade em que nada dura e tudo é passageiro.' },
+      palavras: ['Bauman', 'Modernidade Líquida'], ideia: ['frág', 'líquid', 'passageir', 'vínculos'] },
+    { id: 'han', tipo: 'Pensador', titulo: 'Sociedade do Cansaço', fonte: 'Byung-Chul Han, 2010',
+      apresenta: 'Na obra Sociedade do Cansaço, publicada pelo filósofo Byung-Chul Han em 2010, o autor afirma que vivemos em uma sociedade do desempenho.',
+      explica: 'Segundo ele, as pessoas se cobram produtividade o tempo todo, e essa autoexploração leva ao esgotamento e a doenças como a depressão.',
+      conecta: { 2: 'Dessa forma, a exposição constante nas redes sociais intensifica a cobrança por desempenho e favorece o esgotamento mental dos jovens.',
+                 4: 'Nesse sentido, a hiperconexão das telas fragmenta a atenção e aumenta o cansaço mental.' },
+      palavras: ['Han', 'Sociedade do Cansaço', 'Byung-Chul'], ideia: ['desempenho', 'produtividade', 'esgotamento', 'cansaço', 'autoexplora'] },
+    { id: 'debord', tipo: 'Pensador', titulo: 'A Sociedade do Espetáculo', fonte: 'Guy Debord, 1967',
+      apresenta: 'Na obra A Sociedade do Espetáculo, publicada por Guy Debord em 1967, o autor afirma que as relações sociais passaram a ser mediadas por imagens.',
+      explica: 'Para ele, as pessoas trocam a experiência real pela aparência e passam a viver como espectadoras da própria vida.',
+      conecta: { 2: 'Nesse sentido, a vida editada que os jovens mostram nas redes sociais reforça a comparação e a insatisfação.',
+                 1: 'Da mesma forma, notícias falsas se espalham porque o impacto da imagem vale mais do que a verificação dos fatos.' },
+      palavras: ['Debord', 'Sociedade do Espetáculo'], ideia: ['imagens', 'aparência', 'espetáculo', 'espectador'] },
+    { id: 'freire', tipo: 'Pensador', titulo: 'Pedagogia do Oprimido', fonte: 'Paulo Freire, 1968',
+      apresenta: 'Na obra Pedagogia do Oprimido, escrita por Paulo Freire em 1968, o educador critica a chamada educação bancária.',
+      explica: 'Nesse modelo, o aluno apenas recebe e memoriza informações, enquanto Freire defende uma educação crítica, que ensina a questionar a realidade.',
+      conecta: { 0: 'Dessa forma, a escola precisa usar a inteligência artificial para estimular perguntas, e não para entregar respostas prontas.',
+                 3: 'Da mesma maneira, garantir acesso à tecnologia só transforma quando vem acompanhado de uma educação que ensine a pensar criticamente.',
+                 5: 'Nesse sentido, o ensino técnico deve formar o jovem para compreender o trabalho, e não apenas para repetir tarefas.' },
+      palavras: ['Freire', 'Pedagogia do Oprimido'], ideia: ['bancária', 'crítica', 'questionar', 'memoriza'] },
+    { id: 'cf205', tipo: 'Lei', titulo: 'Constituição Federal, art. 205', fonte: 'Constituição Federal, 1988',
+      apresenta: 'O artigo 205 da Constituição Federal de 1988 afirma que a educação é direito de todos e dever do Estado e da família.',
+      explica: 'O texto também diz que a educação deve promover o pleno desenvolvimento da pessoa, o preparo para a cidadania e a qualificação para o trabalho.',
+      conecta: { 3: 'Nesse sentido, a desigualdade de acesso à tecnologia contraria esse direito, pois impede que todos os estudantes aprendam em condições iguais.',
+                 5: 'Dessa forma, a valorização do ensino técnico cumpre o objetivo constitucional de qualificar o jovem para o trabalho.',
+                 0: 'Analogamente, o uso da IA nas escolas deve respeitar o pleno desenvolvimento do estudante.' },
+      palavras: ['Constituição', 'artigo 205', 'art. 205'], ideia: ['direito de todos', 'dever do Estado', 'qualificaç', 'cidadania'] },
+    { id: 'lei15100', tipo: 'Lei', titulo: 'Lei 15.100/2025', fonte: 'Lei nº 15.100, 2025',
+      apresenta: 'A Lei 15.100, sancionada em janeiro de 2025, restringe o uso de celulares e outros aparelhos portáteis nas escolas de educação básica do país.',
+      explica: 'A norma permite o uso apenas com fins pedagógicos, de acessibilidade ou de saúde, e busca proteger a saúde mental e a atenção dos estudantes.',
+      conecta: { 4: 'Dessa forma, a lei reconhece que o uso excessivo de telas prejudica a concentração e precisa ser limitado no ambiente escolar.',
+                 2: 'Nesse sentido, a lei mostra que o poder público já associa o uso de celulares à proteção da saúde mental dos jovens.' },
+      palavras: ['Lei 15.100', '15.100'], ideia: ['celular', 'escolas', 'restring', 'saúde mental', 'pedagógic'],
+      aviso: 'Há debate científico sobre os efeitos dos celulares. Use a lei como medida de política pública.' },
+    { id: 'unesco2023', tipo: 'Relatório', titulo: 'Relatório da UNESCO sobre tecnologia na educação', fonte: 'UNESCO, 2023',
+      apresenta: 'O Relatório de Monitoramento Global da Educação de 2023, da UNESCO, discute o uso da tecnologia na educação.',
+      explica: 'O documento alerta que o uso de smartphones em sala pode distrair os alunos e defende que a tecnologia seja ferramenta, sem substituir a interação humana.',
+      conecta: { 4: 'Da mesma forma, a distração causada pelos celulares reforça a necessidade de limitar o uso de telas para recuperar a concentração dos estudantes.',
+                 0: 'Assim, a tecnologia, incluindo a IA, deve ser ferramenta de apoio ao professor, e não substituí-lo.' },
+      palavras: ['UNESCO'], ideia: ['smartphone', 'celular', 'distra', 'ferramenta', 'interação'],
+      aviso: 'Cite como recomendação para cada país definir suas regras, e não como uma proibição global.' },
+    { id: 'pnadtic', tipo: 'Pesquisa', titulo: 'PNAD Contínua TIC', fonte: 'IBGE, 2021',
+      apresenta: 'A PNAD Contínua TIC, do IBGE, mostrou que, em 2021, cerca de 85% dos brasileiros com 10 anos ou mais acessaram a internet.',
+      explica: 'Entre eles, quase 99% usaram o celular para acessar a rede, enquanto o computador foi usado por uma parcela bem menor.',
+      conecta: { 3: 'Nesse sentido, como o celular é o meio dominante de acesso à internet, quem depende só dele pode ter mais dificuldade para estudar e trabalhar do que quem também tem computador.',
+                 4: 'Assim, o celular está sempre ao alcance dos jovens, o que facilita o uso excessivo de telas.' },
+      palavras: ['PNAD', 'IBGE'], ideia: ['celular', 'internet', 'acesso'],
+      aviso: 'Dado de 2021. Confira o número mais recente do IBGE antes de usar na prova.' },
+    { id: 'lei11892', tipo: 'Lei', titulo: 'Lei 11.892/2008', fonte: 'Lei nº 11.892, 2008',
+      apresenta: 'A Lei 11.892, de 2008, criou a Rede Federal de Educação Profissional, Científica e Tecnológica e os Institutos Federais.',
+      explica: 'Os institutos oferecem educação profissional e tecnológica em vários níveis e têm entre seus objetivos o desenvolvimento socioeconômico local e regional.',
+      conecta: { 5: 'Dessa forma, instituições como o IFSul aproximam o jovem do mercado de trabalho e impulsionam o desenvolvimento de cada região.',
+                 3: 'Nesse sentido, a expansão dos institutos pelo interior leva formação tecnológica ao interior e reduz a desigualdade de acesso entre as regiões.' },
+      palavras: ['11.892', 'Institutos Federais'], ideia: ['institutos', 'profissional', 'tecnológic', 'desenvolvimento'] }
+  ];
   /* DATA END */
 
   /* ---------- salvamento ---------- */
   var KEY = 'cavaleiro-virgula-v2', OLD_KEY = 'cavaleiro-virgula-v1';
   function loadSave() {
-    var d = { coins: 0, lv: { sword: 0, armor: 0, helm: 0, clock: 0, luck: 0 }, realms: {}, miss: {}, hits: 0, tries: 0, mode: 'mixed', sound: true, cape: 0, last: 0, essays: [], draft: '', theme: 0, repOk: false, part: 'intro', drafts: {}, pbest: {}, lastReward: '', plan: null };
+    var d = { coins: 0, lv: { sword: 0, armor: 0, helm: 0, clock: 0, luck: 0 }, realms: {}, miss: {}, hits: 0, tries: 0, mode: 'mixed', sound: true, cape: 0, last: 0, essays: [], draft: '', theme: 0, repOk: false, part: 'intro', drafts: {}, pbest: {}, lastReward: '', plan: null, cori: { st: {}, custom: [] } };
     try {
       var r = JSON.parse(localStorage.getItem(KEY) || 'null'), j, k;
       if (r) {
@@ -796,6 +921,7 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
     return d;
   }
   var save = loadSave();
+  save.cori = save.cori || {}; save.cori.st = save.cori.st || {}; save.cori.custom = save.cori.custom || [];
   function persist() { try { localStorage.setItem(KEY, JSON.stringify(save)); } catch (e) { /* ignora */ } }
   function maxHp() { return 100 + 25 * save.lv.armor; }
   function realmBest(i) { return (save.realms[REALMS[i].id] || {}).best || 0; }
@@ -839,7 +965,7 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
 
   function show(name) {
     scr = name;
-    ['menu', 'battle', 'shop', 'write', 'plan'].forEach(function (n) { $('sc-' + n).hidden = n !== name; });
+    ['menu', 'battle', 'shop', 'write', 'plan', 'cori'].forEach(function (n) { $('sc-' + n).hidden = n !== name; });
     $('bars').hidden = name !== 'battle';
     updHud();
   }
@@ -1345,9 +1471,9 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
   var GEN_AG = /\b(o governo|a sociedade|todos nós|as autoridades|o estado)\b/i;
   var TOPIC_RE = /^(Em primeiro lugar|Em primeiro plano|Primeiramente|Em segundo lugar|Em segundo plano|Inicialmente|Ademais|Além disso|Nesse sentido|Nesse contexto|Por outro lado|Outrossim|Sobretudo|Dessa forma|Também|Por fim),/;
   var CONCL_RE = /^(Portanto|Em suma|Em síntese|Em conclusão|Logo|Dessa forma|Dessa maneira|Assim|Por fim|Diante disso|Nesse sentido),/;
-  var REPCUE_RE = /\b(filme|livro|obra|série|animação|romance|pesquisa|segundo|de acordo com|filósofo|revista|IBGE|UNESCO|Orwell|Matrix|Wall-E|Platão|Tolkien|Bauman|dados|estudo|relatório)\b/i;
+  var REPCUE_RE = /\b(filme|livro|obra|lei|artigo|Constituição|norma|série|animação|romance|pesquisa|segundo|de acordo com|filósofo|revista|IBGE|UNESCO|Orwell|Matrix|Wall-E|Platão|Tolkien|Bauman|dados|estudo|relatório)\b/i;
   var EXPL_RE = /\b(mostra|mostram|retrata|retratam|apresenta|apresentam|revela|revelam|narra|conta|trama|história|nela|nele|na obra|no filme|no livro|na animação|os dados|a pesquisa|o estudo)\b/i;
-  var LINK_RE = /(Da mesma forma|Do mesmo modo|De modo semelhante|Assim como|Analogamente|Dessa forma|Dessa maneira|Logo|Portanto|Nesse sentido|Semelhantemente|Por isso|Assim,)/i;
+  var LINK_RE = /(Da mesma forma|Da mesma maneira|Do mesmo modo|De modo semelhante|Assim como|Analogamente|Dessa forma|Dessa maneira|Logo|Portanto|Nesse sentido|Semelhantemente|Por isso|Assim,)/i;
   var ACAO_RE = /\b(deve|devem|precisa|precisam|cabe|é necessário|é fundamental)\b/i;
   var MEIO_RE = /\b(por meio d[eao]s?|mediante|através d[eao]s?|com o uso d[eao]s?)\b/i;
   var FIM_RE = /\b(a fim de|para que|com o objetivo de|com a finalidade de|de modo a|com o intuito de)\b/i;
@@ -1701,6 +1827,210 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
     }
   }
 
+  /* ---------- cofre de coringas: estudar, lembrar de memória e aplicar em um parágrafo ---------- */
+  var DAY = 864e5;
+  var escRe = function (s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); };
+  function prepCori(c) {
+    c.reg = new RegExp('(^|[^A-Za-zÀ-ú0-9])(' + c.palavras.map(escRe).join('|') + ')(?![A-Za-zÀ-ú0-9])', 'i');
+    c.idRe = new RegExp(c.ideia.map(escRe).join('|'), 'i');
+    c.temas = Object.keys(c.conecta).map(Number);
+    return c;
+  }
+  CORI.forEach(prepCori);
+  var cv = null;
+  function coriAll() { return CORI.concat((save.cori.custom || []).map(function (c) { return prepCori(Object.assign({}, c)); })); }
+  function coriCard(id) { return coriAll().filter(function (c) { return c.id === id; })[0]; }
+  function coriStatus(c) {
+    var s = save.cori.st[c.id];
+    if (!s) return 'novo';
+    if (s.lvl >= 3) return s.due && s.due < Date.now() ? 'revisar' : 'aplicado';
+    return s.lvl === 2 ? 'lembrado' : s.lvl === 1 ? 'estudado' : 'novo';
+  }
+  var STATUS_TXT = { novo: 'Novo', estudado: 'Estudado: falta o teste', lembrado: 'Lembrado: falta aplicar', aplicado: 'Aplicado', revisar: 'Revisar: faça o teste de novo' };
+  function coriPending() { return coriAll().filter(function (c) { return coriStatus(c) === 'lembrado'; }).length; }
+  function coriLocked(c) { return coriStatus(c) === 'novo' && coriPending() >= 2; }
+  function setLvl(id, lvl, due) {
+    var s = save.cori.st[id] || (save.cori.st[id] = { lvl: 0, due: 0 });
+    s.lvl = lvl; if (due != null) s.due = due;
+    persist();
+  }
+
+  function renderCori() {
+    var all = coriAll(), tema = +$('coritema').value, done = 0, rev = 0;
+    all.forEach(function (c) { var st = coriStatus(c); if (st === 'aplicado') done++; if (st === 'revisar') rev++; });
+    $('coriprog').innerHTML = '<div><dt>Aplicados</dt><dd>' + done + '/' + all.length + '</dd></div><div><dt>Lembrados sem aplicar</dt><dd>' + coriPending() + '/2</dd></div><div><dt>Para revisar</dt><dd>' + rev + '</dd></div>';
+    var list = all.filter(function (c) { return tema < 0 || c.temas.indexOf(tema) >= 0; });
+    $('corilist').innerHTML = list.map(function (c) {
+      var st = coriStatus(c), lock = coriLocked(c);
+      return '<button type="button" class="realm" data-c="' + esc(c.id) + '"' + (lock ? ' aria-disabled="true"' : '') + '><span class="rt">' + esc(c.titulo) + '</span><span class="rd">' + esc(c.tipo) + ' · ' + esc(c.fonte) + '</span><span class="rb">' +
+        (lock ? 'Bloqueado: aplique os coringas lembrados' : STATUS_TXT[st]) + '</span></button>';
+    }).join('') || '<p class="hint">Nenhum coringa para este tema ainda. Peça mais ao Claude.</p>';
+    $('coribrowse').hidden = !!cv;
+    $('coriview').hidden = !cv;
+  }
+  function openCoriScreen() {
+    cv = null;
+    $('coritema').innerHTML = '<option value="-1">Todos os temas</option>' + THEMES.map(function (t, i) { return '<option value="' + i + '">' + (i + 1) + '. ' + esc(t) + '</option>'; }).join('');
+    $('corimsg').textContent = '';
+    renderCori(); show('cori');
+  }
+  function coriTemaSel(c, cur, id) {
+    return '<label class="fld">Tema <select id="' + id + '">' + c.temas.map(function (t) { return '<option value="' + t + '"' + (t === cur ? ' selected' : '') + '>' + esc(THEMES[t]) + '</option>'; }).join('') + '</select></label>';
+  }
+  function renderCoriView() {
+    var c = coriCard(cv.id), el = $('coriview'), h = '';
+    if (!c) { cv = null; renderCori(); return; }
+    if (cv.step === 'study') {
+      h = '<h3>' + esc(c.titulo) + '</h3><p class="hint">' + esc(c.tipo) + ' · ' + esc(c.fonte) + '</p>' +
+        '<div class="scroll plain"><p><b>1) Apresenta:</b> ' + esc(c.apresenta) + '</p><p><b>2) Explica:</b> ' + esc(c.explica) + '</p>' +
+        '<p><b>3) Conecta com o tema:</b> ' + esc(c.conecta[cv.tema]) + '</p></div>' + coriTemaSel(c, cv.tema, 'coritsel') +
+        (c.aviso ? '<p class="weak"><b>Cuidado:</b> ' + esc(c.aviso) + '</p>' : '') +
+        '<p class="hint">Leia em voz alta duas vezes e tente guardar: quem criou, quando e o que acontece. Depois faça o teste sem olhar.</p>' +
+        '<div class="actions"><button class="btn" id="cori-test" type="button">Já estudei, me testar</button><button class="btn ghost" id="cori-close" type="button">Voltar à lista</button></div>';
+    } else if (cv.step === 'quiz') {
+      var z = cv.qz, q = z.qs[z.i];
+      h = '<h3>Teste de memória ' + (z.i + 1) + ' de ' + z.qs.length + '</h3><p class="inst">' + esc(q.p) + '</p>' +
+        (q.ctx ? '<div class="scroll plain"><p>' + esc(q.ctx) + '</p></div>' : '');
+      if (q.t === 'c') {
+        h += '<div class="optlist">' + q.opts.map(function (o, i) {
+          return '<button type="button" class="opt" data-qo="' + i + '" aria-pressed="' + (z.sel === i ? 'true' : 'false') + '"><span class="kb">' + (i + 1) + '</span>' + esc(o) + '</button>';
+        }).join('') + '</div>';
+      } else {
+        h += '<textarea class="write" id="coriqt" rows="2" spellcheck="false" aria-label="Sua resposta" placeholder="Digite o nome de memória." style="min-height:0"' + (z.answered ? ' disabled' : '') + '>' + esc(z.typed || '') + '</textarea>';
+      }
+      if (!z.answered) h += '<div class="actions"><button class="btn" id="cori-ans" type="button">Responder</button></div>';
+      else h += '<p class="' + (z.last.ok ? 'tag-ok' : 'tag-bad') + '">' + (z.last.ok ? 'Certo!' : 'Não foi dessa vez.') + '</p>' + (z.last.ok ? '' : '<p>Resposta certa: ' + esc(z.last.correct) + '</p>') +
+        '<div class="actions"><button class="btn" id="cori-next" type="button">' + (z.i + 1 >= z.qs.length ? 'Ver resultado' : 'Próxima') + '</button></div>';
+    } else if (cv.step === 'result') {
+      h = '<h3>' + (cv.pass ? 'Você lembrou!' : 'Ainda não') + '</h3><p>' + esc(cv.msg) + '</p><div class="actions">' +
+        (cv.pass && cv.canApply ? '<button class="btn" id="cori-toapply" type="button">Aplicar em um parágrafo</button>' : '') +
+        (cv.pass ? '' : '<button class="btn" id="cori-restudy" type="button">Estudar de novo</button>') +
+        '<button class="btn ghost" id="cori-close" type="button">Voltar à lista</button></div>';
+    } else {
+      h = '<h3>Aplique “' + esc(c.titulo) + '” em um parágrafo</h3>' +
+        '<p class="hint">Escreva um Desenvolvimento (D1): tópico frasal com conectivo, explicação, o coringa explicado e a ligação com o tema na última frase. Precisa de 75% do checklist e das duas linhas do coringa.</p>' +
+        coriTemaSel(c, cv.tema, 'coriasel') + '<p class="weak"><b>Modelo da última frase:</b> ' + esc(c.conecta[cv.tema]) + '</p>' +
+        '<textarea class="write" id="coriw" spellcheck="true" aria-label="Seu parágrafo" placeholder="Escreva o parágrafo aqui, sem linha em branco.">' + esc(cv.draft || '') + '</textarea>' +
+        '<p class="hint" id="coriwcount"></p><ul class="check" id="coriwc"></ul>' +
+        '<div class="actions"><button class="btn" id="cori-done" type="button">Concluir aplicação</button><button class="btn ghost" id="cori-copy" type="button">Copiar para o Claude corrigir</button><button class="btn ghost" id="cori-study" type="button">Rever o card</button></div>' +
+        '<p class="hint" id="coriamsg" role="status"></p>';
+    }
+    el.innerHTML = h; el.hidden = false; $('coribrowse').hidden = true;
+    if (cv.step === 'apply') updApply();
+  }
+  function openCori(id) {
+    var c = coriCard(id);
+    if (!c || coriLocked(c)) return;
+    var st = coriStatus(c);
+    cv = { id: id, step: 'study', tema: c.temas[0] };
+    if (st === 'novo') setLvl(id, 1);
+    renderCoriView();
+  }
+  function startCoriQuiz() {
+    var c = coriCard(cv.id), others = shuffle(coriAll().filter(function (x) { return x.id !== c.id; })), uniq = function (a, v) { return a.indexOf(v) < 0 ? a.concat([v]) : a; };
+    var fo = others.map(function (x) { return x.fonte; }).filter(function (f) { return f !== c.fonte; }).reduce(uniq, []).slice(0, 3);
+    var eo = others.map(function (x) { return x.explica; }).slice(0, 3);
+    var masked = c.explica.replace(new RegExp(c.reg.source, 'gi'), function (m, a) { return a + '____'; });
+    cv.qz = { i: 0, sel: null, answered: false, ok: [], typed: '', last: null, qs: [
+      { t: 'c', p: 'Quem criou ou publicou “' + c.titulo + '”, e quando?', opts: shuffle([c.fonte].concat(fo)), ok: c.fonte },
+      { t: 'c', p: 'O que acontece ou o que defende “' + c.titulo + '”?', opts: shuffle([c.explica].concat(eo)), ok: c.explica },
+      { t: 't', p: 'Que obra, lei ou pesquisa é esta? Digite o nome ou o autor.', ctx: masked }
+    ] };
+    cv.step = 'quiz'; renderCoriView();
+  }
+  function answerCori() {
+    var z = cv.qz, q = z.qs[z.i], c = coriCard(cv.id), ok, got;
+    if (q.t === 'c') { if (z.sel == null) return; got = q.opts[z.sel]; ok = got === q.ok; }
+    else { got = $('coriqt').value; if (!got.trim()) return; z.typed = got; ok = c.reg.test(got); }
+    z.answered = true; z.ok.push(ok); z.last = { ok: ok, correct: q.t === 'c' ? q.ok : c.titulo + ' (' + c.fonte + ')' };
+    if (!ok) { save.miss['Repertório'] = (save.miss['Repertório'] || 0) + 1; persist(); }
+    renderCoriView();
+  }
+  function nextCori() {
+    var z = cv.qz;
+    z.i++; z.sel = null; z.answered = false; z.typed = '';
+    if (z.i >= z.qs.length) finishCoriQuiz(); else renderCoriView();
+  }
+  function finishCoriQuiz() {
+    var c = coriCard(cv.id), pass = cv.qz.ok.every(Boolean), s = save.cori.st[c.id], applied = s && s.lvl >= 3;
+    cv.pass = pass; cv.canApply = false;
+    if (pass && applied) { setLvl(c.id, 3, Date.now() + 7 * DAY); cv.msg = 'Revisão feita! O coringa continua aplicado e volta para revisão em 7 dias.'; }
+    else if (pass) {
+      var first = !s || s.lvl < 2;
+      setLvl(c.id, 2);
+      if (first) { save.coins += 10; persist(); updHud(); }
+      cv.canApply = true; cv.msg = 'Você acertou as três perguntas' + (first ? ' e ganhou 10 moedas' : '') + '. Agora aplique em um parágrafo para fixar. Enquanto não aplicar, ele conta nos 2 coringas pendentes.';
+    } else cv.msg = 'Você errou ' + cv.qz.ok.filter(function (x) { return !x; }).length + ' de ' + cv.qz.qs.length + '. Estude o card mais uma vez e refaça o teste.';
+    cv.step = 'result'; renderCoriView(); updHud();
+  }
+  function evalCori(text, c, tema) {
+    var r = evalPart(text, 'dev', tema), rows = r.rows.slice(), usa = c.reg.test(text), idea = c.idRe.test(text);
+    rows.push({ key: 'usa', label: 'Cita o coringa (' + c.titulo + ')', cat: 'Repertório', ok: usa, d: usa ? 'Ok.' : 'Cite pelo nome: ' + c.palavras[0] + '.' });
+    rows.push({ key: 'ideia', label: 'Explica a ideia central do coringa', cat: 'Repertório', ok: idea, d: idea ? 'Ok.' : 'Explique com palavras como: ' + c.ideia.slice(0, 3).join(', ') + '.' });
+    var passed = rows.filter(function (x) { return x.ok; }).length, score = passed / rows.length;
+    return { rows: rows, passed: passed, total: rows.length, score: score, has: r.has, ok: r.has && score >= 0.75 && usa && idea };
+  }
+  function updApply() {
+    var ta = $('coriw'); if (!ta) return;
+    var c = coriCard(cv.id), r = evalCori(ta.value, c, cv.tema);
+    cv.draft = ta.value;
+    $('coriwcount').textContent = wordsOf(ta.value) + ' palavras · ' + r.passed + ' de ' + r.total + ' critérios';
+    $('coriwc').innerHTML = checksHtml(r.rows, r.has);
+  }
+  function doneApply() {
+    var c = coriCard(cv.id), r = evalCori($('coriw').value, c, cv.tema), s = save.cori.st[c.id], first = !s || s.lvl < 3;
+    if (!r.ok) { $('coriamsg').textContent = 'Ainda não: passou em ' + r.passed + ' de ' + r.total + ' critérios. Precisa de 75% e das duas linhas do coringa.'; return; }
+    setLvl(c.id, 3, Date.now() + 3 * DAY);
+    if (first) { save.coins += 30; persist(); }
+    cv.step = 'result'; cv.pass = true; cv.canApply = false;
+    cv.msg = 'Coringa aplicado' + (first ? ', +30 moedas' : '') + '! Ele volta para revisão em 3 dias. Agora você pode estudar um novo.';
+    renderCoriView(); updHud();
+  }
+  function coriRequest() {
+    var have = coriAll().map(function (c) { return c.titulo; }).join('; ');
+    return 'Você é meu professor de redação. Responda sempre em português do Brasil, de forma direta e honesta.\n\n' +
+      'Preciso de repertórios coringa para a prova de redação do processo seletivo de TADS do IFSul, campus Venâncio Aires: referências que servem para vários temas. Pesquise na web e confirme cada dado (nomes, anos, leis, números) em fontes confiáveis. Não invente nada: se um dado for incerto, deixe de fora ou avise no campo "aviso".\n' +
+      'Traga 6 coringas novos (livros, filmes, pensadores, leis ou pesquisas) diferentes destes, que eu já tenho: ' + have + '.\n\n' +
+      'Temas (número): ' + THEMES.map(function (t, i) { return i + ' = ' + t; }).join('; ') + '.\n\n' +
+      'Responda SOMENTE com um JSON válido, sem texto antes ou depois e sem markdown, porque vou colar a resposta num jogo de treino, neste formato:\n' +
+      '{"coringas": [{\n' +
+      '  "tipo": "Livro | Filme | Série | Pensador | Lei | Pesquisa",\n' +
+      '  "titulo": "nome curto",\n' +
+      '  "fonte": "autor ou órgão, ano",\n' +
+      '  "apresenta": "1 frase que apresenta a obra ou o dado, com autor e ano",\n' +
+      '  "explica": "1 frase que explica o que acontece nela ou o que o dado mostra",\n' +
+      '  "conecta": {"0": "frase que liga ao tema 0", "2": "frase que liga ao tema 2"},\n' +
+      '  "palavras": ["nome da obra", "nome do autor"],\n' +
+      '  "ideia": ["radicais de palavras da ideia central, como vigi, controle"],\n' +
+      '  "aviso": "cuidado ao usar, se houver, ou texto vazio"\n' +
+      '}]}\n' +
+      'Regras: cada coringa deve ligar a pelo menos 2 temas em "conecta" (chaves de 0 a 5), com frases prontas de redação que comecem com um conectivo seguido de vírgula; "palavras" são os nomes pelos quais eu vou citar a referência; frases curtas, sem erros de português.';
+  }
+  function addCori() {
+    var txt = $('coriimp').value;
+    if (!txt.trim()) { $('corimsg').textContent = 'Cole a resposta do Claude no campo acima.'; return; }
+    try {
+      var raw = extractJson(txt), list = Array.isArray(raw.coringas) ? raw.coringas.slice(0, 30) : [], added = 0, dropped = 0, have = coriAll().map(function (c) { return c.titulo.toLowerCase(); });
+      list.forEach(function (it) {
+        if (!it || typeof it !== 'object') { dropped++; return; }
+        var c = { tipo: cleanStr(it.tipo, 20) || 'Referência', titulo: cleanStr(it.titulo, 80), fonte: cleanStr(it.fonte, 80), apresenta: cleanStr(it.apresenta, 300), explica: cleanStr(it.explica, 300), aviso: cleanStr(it.aviso, 200), conecta: {}, palavras: [], ideia: [] };
+        var cn = it.conecta && typeof it.conecta === 'object' ? it.conecta : {};
+        Object.keys(cn).forEach(function (k) { var n = +k, f = cleanStr(cn[k], 300); if (n >= 0 && n < THEMES.length && Math.floor(n) === n && f.length >= 20) c.conecta[n] = f; });
+        c.palavras = (Array.isArray(it.palavras) ? it.palavras : []).map(function (x) { return cleanStr(x, 60); }).filter(Boolean).slice(0, 5);
+        c.ideia = (Array.isArray(it.ideia) ? it.ideia : []).map(function (x) { return cleanStr(x, 40); }).filter(Boolean).slice(0, 8);
+        if (!c.titulo || !c.fonte || c.apresenta.length < 20 || c.explica.length < 20 || !Object.keys(c.conecta).length || !c.palavras.length || !c.ideia.length || have.indexOf(c.titulo.toLowerCase()) >= 0) { dropped++; return; }
+        c.id = 'x' + Date.now().toString(36) + added;
+        save.cori.custom.push(c); have.push(c.titulo.toLowerCase()); added++;
+      });
+      if (!added) throw new Error('Nenhum coringa válido ou novo. Peça ao Claude para seguir o formato.');
+      persist(); $('coriimp').value = '';
+      $('corimsg').textContent = added + ' coringa(s) adicionado(s)' + (dropped ? ' e ' + dropped + ' descartado(s) por formato inválido ou repetição' : '') + '.';
+      sfx.buy(); renderCori();
+    } catch (e) {
+      $('corimsg').textContent = 'Não consegui ler: ' + (e && e.message ? e.message : 'JSON inválido') + ' Confira se colou a resposta inteira.';
+    }
+  }
+
   /* ---------- eventos ---------- */
   $('realms').addEventListener('click', function (e) {
     var b = e.target.closest('.realm');
@@ -1812,6 +2142,43 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
   });
   $('planback').addEventListener('click', toMenu);
   $('wpaste').addEventListener('click', openPlan);
+
+  $('mcori').addEventListener('click', openCoriScreen);
+  $('coriback').addEventListener('click', toMenu);
+  $('coritema').addEventListener('change', renderCori);
+  $('corilist').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-c]');
+    if (b && b.getAttribute('aria-disabled') !== 'true') openCori(b.getAttribute('data-c'));
+  });
+  $('coriview').addEventListener('click', function (e) {
+    var t = e.target.closest('button');
+    if (!t || !cv) return;
+    var id = t.id;
+    if (id === 'cori-close') { cv = null; renderCori(); }
+    else if (id === 'cori-test') startCoriQuiz();
+    else if (id === 'cori-restudy' || id === 'cori-study') { cv.step = 'study'; renderCoriView(); }
+    else if (id === 'cori-ans') answerCori();
+    else if (id === 'cori-next') nextCori();
+    else if (id === 'cori-toapply') { cv.step = 'apply'; renderCoriView(); }
+    else if (id === 'cori-done') doneApply();
+    else if (id === 'cori-copy') {
+      var tx = $('coriw').value;
+      if (tx.trim().length < 30) { $('coriamsg').textContent = 'Escreva o parágrafo antes de copiar o pedido.'; return; }
+      copyText(buildPartPrompt('dev', cv.tema, tx)).then(function () { $('coriamsg').textContent = 'Pedido copiado. Cole no Claude e traga o JSON em Treino personalizado.'; }, function () { $('coriamsg').textContent = 'Não consegui copiar sozinho.'; });
+    } else if (t.hasAttribute('data-qo') && cv.step === 'quiz' && !cv.qz.answered) {
+      cv.qz.sel = +t.getAttribute('data-qo'); renderCoriView();
+    }
+  });
+  $('coriview').addEventListener('change', function (e) {
+    if (!cv) return;
+    if (e.target.id === 'coritsel') { cv.tema = +e.target.value; renderCoriView(); }
+    else if (e.target.id === 'coriasel') { cv.tema = +e.target.value; renderCoriView(); }
+  });
+  $('coriview').addEventListener('input', function (e) { if (cv && e.target.id === 'coriw') updApply(); });
+  $('coricopy').addEventListener('click', function () {
+    copyText(coriRequest()).then(function () { $('corimsg').textContent = 'Pedido copiado. Cole no Claude e traga a resposta em JSON para o campo abaixo.'; }, function () { $('corimsg').textContent = 'Não consegui copiar sozinho.'; });
+  });
+  $('coriadd').addEventListener('click', addCori);
 
   /* ---------- desenho ---------- */
   var cv = $('cv'), cx = cv.getContext('2d'), DPR = Math.min(2, window.devicePixelRatio || 1);
