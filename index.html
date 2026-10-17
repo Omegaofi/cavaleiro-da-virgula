@@ -188,6 +188,7 @@ details.rules p { margin: 10px 0 2px; }
 select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--text); background: var(--panel2); border: 2px solid var(--line); border-radius: 4px; padding: 10px 12px; max-width: 100%; }
 .write { display: block; width: 100%; box-sizing: border-box; font: 400 17px/1.6 var(--f-text); color: var(--paper-ink); background: #fbf4de; border: 2px solid #b9a770; border-radius: 6px; padding: 12px 14px; min-height: 200px; resize: vertical; }
 .write:focus-visible { outline-color: var(--gold); }
+.write.mono { font: 400 14px/1.5 Consolas, "Courier New", monospace; min-height: 160px; }
 .check { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .check li { background: var(--panel2); border-radius: 4px; padding: 10px 12px; display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; align-items: baseline; }
 .check .st { font: 700 14px/1.3 var(--f-display); min-width: 52px; }
@@ -250,6 +251,7 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
         </div>
       </fieldset>
       <div class="actions">
+        <button class="btn" id="mplan" type="button">Treino personalizado</button>
         <button class="btn" id="mwrite" type="button">Oficina de parágrafos</button>
         <button class="btn ghost" id="mshop" type="button">Loja e guarda-roupa</button>
       </div>
@@ -297,6 +299,24 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
       </div>
     </section>
 
+    <section class="panel" id="sc-plan" hidden>
+      <h2>Treino personalizado</h2>
+      <p class="lead">1) Faça um duelo ou a oficina e copie o pedido para o Claude. 2) Cole aqui a resposta dele, em JSON. 3) O jogo monta exercícios com os seus erros no Treino do Mestre e reforça esses pontos nos reinos, até o próximo desafio.</p>
+      <p class="weak" id="planstatus"></p>
+      <textarea class="write mono" id="planjson" spellcheck="false" aria-label="Resposta do Claude em JSON" placeholder="Cole aqui a resposta do Claude (o JSON inteiro)."></textarea>
+      <div class="actions">
+        <button class="btn" id="planload" type="button">Carregar treino</button>
+        <button class="btn" id="planstart" type="button">Começar treino</button>
+        <button class="btn ghost" id="plantoof" type="button">Ir para o próximo desafio</button>
+      </div>
+      <p class="hint" id="planmsg" role="status"></p>
+      <details class="rules" id="plansumbox"><summary>Resumo da correção do Claude</summary><div id="plansum"></div></details>
+      <div class="actions">
+        <button class="btn ghost" id="planclear" type="button">Apagar treino</button>
+        <button class="btn ghost" id="planback" type="button">Mapa</button>
+      </div>
+    </section>
+
     <section class="panel" id="sc-write" hidden>
       <h2>Oficina de parágrafos</h2>
       <p class="lead">Treine uma parte da redação por vez, sem luta. Escreva, confira o checklist e copie o pedido pronto para o Claude corrigir. O mesmo checklist vale no duelo de escrita contra os chefes.</p>
@@ -311,6 +331,7 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
       <ul class="check" id="wcheck"></ul>
       <div class="actions">
         <button class="btn" id="wcopy" type="button">Copiar pedido para o Claude</button>
+        <button class="btn ghost" id="wpaste" type="button">Colar resposta do Claude</button>
         <button class="btn ghost" id="wclear" type="button">Limpar texto</button>
         <button class="btn ghost" id="wback" type="button">Mapa</button>
       </div>
@@ -755,7 +776,7 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
   /* ---------- salvamento ---------- */
   var KEY = 'cavaleiro-virgula-v2', OLD_KEY = 'cavaleiro-virgula-v1';
   function loadSave() {
-    var d = { coins: 0, lv: { sword: 0, armor: 0, helm: 0, clock: 0, luck: 0 }, realms: {}, miss: {}, hits: 0, tries: 0, mode: 'mixed', sound: true, cape: 0, last: 0, essays: [], draft: '', theme: 0, repOk: false, part: 'intro', drafts: {}, pbest: {}, lastReward: '' };
+    var d = { coins: 0, lv: { sword: 0, armor: 0, helm: 0, clock: 0, luck: 0 }, realms: {}, miss: {}, hits: 0, tries: 0, mode: 'mixed', sound: true, cape: 0, last: 0, essays: [], draft: '', theme: 0, repOk: false, part: 'intro', drafts: {}, pbest: {}, lastReward: '', plan: null };
     try {
       var r = JSON.parse(localStorage.getItem(KEY) || 'null'), j, k;
       if (r) {
@@ -818,7 +839,7 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
 
   function show(name) {
     scr = name;
-    ['menu', 'battle', 'shop', 'write'].forEach(function (n) { $('sc-' + n).hidden = n !== name; });
+    ['menu', 'battle', 'shop', 'write', 'plan'].forEach(function (n) { $('sc-' + n).hidden = n !== name; });
     $('bars').hidden = name !== 'battle';
     updHud();
   }
@@ -878,7 +899,7 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
 
   var MK = {};
   MK.comma = function (d, boss) {
-    var parts = [BANK[pickIdx('c', BANK, d, tier0)]];
+    var fi = focusCommaIdx(d), parts = [BANK[fi >= 0 ? fi : pickIdx('c', BANK, d, tier0)]];
     if (boss) parts.push(BANK[pickIdx('c', BANK, d, tier0)]);
     var b = build(parts), mode = save.mode;
     if (mode === 'mixed') mode = run.stage === 1 && run.ri === 0 ? 'click' : (Math.random() < (boss ? 0.5 : 0.4) ? 'type' : 'click');
@@ -973,6 +994,7 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
   }
   function tierOf(st) { return run.realm.id === 'torre' ? Math.min(4, 2 + Math.floor((st - 1) / 3)) : Math.min(4, 1 + Math.floor((st - 1) / 3)); }
   function makeQuestion() {
+    if (run.personal) return makePersonalQuestion();
     var st = run.stage, boss = run.enemy.boss, ks = run.realm.kinds, kind = ks[0] === '*' ? mixKind() : ks[rint(ks.length)];
     var d = tierOf(st);
     if (boss && kind !== 'comma') d = Math.min(4, d + 1);
@@ -1132,13 +1154,14 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
     startBattle();
   }
   function spawn() {
-    var st = run.stage, R = run.realm, boss = st % 5 === 0, e = boss ? R.boss : R.enemies[(st - 1 - Math.floor(st / 5)) % R.enemies.length];
+    var st = run.stage, R = run.realm, boss = !run.personal && st % 5 === 0, e = boss ? R.boss : R.enemies[(st - 1 - Math.floor(st / 5)) % R.enemies.length];
     var max = Math.round((50 + 18 * (st - 1)) * (boss ? 2.2 : 1));
     run.enemy = { name: e[0], type: e[1], boss: boss, hp: max, max: max };
     an.die = 0; run.duelDone = false;
   }
   function startBattle() { spawn(); show('battle'); updBars(); nextQuestion(); }
   function nextQuestion() {
+    if (run.personal && !save.plan.queue.length) { finishPersonal(); return; }
     tok++; phase = 'ask'; q = makeQuestion(); renderQ();
     $('fb').hidden = true; $('qact').hidden = false;
     t0 = performance.now(); updHud();
@@ -1150,6 +1173,7 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
     phase = 'feedback'; tok++;
     $('qact').hidden = true;
     save.tries++;
+    if (run.personal) planAnswered(q.pidx, ok);
     var e = run.enemy;
 
     if (ok) {
@@ -1203,19 +1227,19 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
 
   function victory() {
     if (scr !== 'battle') return;
-    var rid = run.realm.id, R = save.realms[rid] = save.realms[rid] || { best: 0, bestScore: 0 }, prev = R.best;
+    var rid = run.realm.id, R = run.personal ? { best: 0, bestScore: 0 } : (save.realms[rid] = save.realms[rid] || { best: 0, bestScore: 0 }), prev = R.best;
     var heal = Math.round(maxHp() * 0.25), before = run.hp;
     run.hp = Math.min(maxHp(), run.hp + heal);
     if (run.stage > R.best) R.best = run.stage;
     if (run.score > R.bestScore) R.bestScore = run.score;
     persist();
     var note = '';
-    if (prev < 5 && R.best >= 5) {
+    if (!run.personal && prev < 5 && R.best >= 5) {
       if (run.ri + 1 < REALMS.length) note += ' Novo reino liberado: ' + REALMS[run.ri + 1].name + '.';
       note += ' Nova capa no guarda-roupa: ' + CAPES[run.ri + 1].n + '.';
     }
-    if (prev < 10 && R.best >= 10) note += ' Segunda estrela deste reino!';
-    if (prev < 15 && R.best >= 15) note += ' Terceira estrela: você domina este reino!';
+    if (!run.personal && prev < 10 && R.best >= 10) note += ' Segunda estrela deste reino!';
+    if (!run.personal && prev < 15 && R.best >= 15) note += ' Terceira estrela: você domina este reino!';
     shopCtx = 'victory';
     $('shtitle').textContent = run.enemy.boss ? 'Chefe derrotado!' : 'Inimigo derrotado!';
     $('shbanner').textContent = 'Você ganhou ' + run.killCoins + ' moedas e recuperou ' + (run.hp - before) + ' de vida.' + note + ' Gaste no ferreiro antes do próximo inimigo.';
@@ -1223,7 +1247,7 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
     renderShop(); show('shop');
   }
   function gameOver() {
-    var rid = run.realm.id, R = save.realms[rid] = save.realms[rid] || { best: 0, bestScore: 0 };
+    var rid = run.realm.id, R = run.personal ? { best: 0, bestScore: 0 } : (save.realms[rid] = save.realms[rid] || { best: 0, bestScore: 0 });
     if (run.stage - 1 > R.best) R.best = run.stage - 1;
     if (run.score > R.bestScore) R.bestScore = run.score;
     persist();
@@ -1305,6 +1329,7 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
       el.hidden = false;
       el.innerHTML = 'Seus erros mais frequentes: ' + w.slice(0, 3).map(function (x) { return '<b>' + esc(x.name) + '</b> (' + x.n + ')'; }).join(', ') + '. Dica: ' + esc(tipFor(w[0].name));
     } else el.hidden = true;
+    $('mplan').textContent = planActive() ? 'Treino personalizado (' + save.plan.queue.length + ')' : 'Treino personalizado';
     Array.prototype.forEach.call(document.querySelectorAll('#modeseg button'), function (b) {
       b.setAttribute('aria-pressed', b.getAttribute('data-mode') === save.mode ? 'true' : 'false');
     });
@@ -1406,7 +1431,7 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
       'Contexto: estou me preparando para a prova de redação do processo seletivo do curso de Tecnologia em Análise e Desenvolvimento de Sistemas (TADS) do IFSul, campus Venâncio Aires. Minha última redação completa foi estimada em ~640/1000 (estilo ENEM).\n' +
       'Meus pontos a melhorar: vírgulas (conectivos iniciais, expressões intercaladas, adjunto deslocado, sujeito separado do verbo), agente genérico na proposta, repertório pouco explicado, introdução misturada com o primeiro argumento, repetição de palavras e detalhes de escrita (Portanto, Além disso, O Hobbit, The Economist).\n\n' +
       'Tarefa: corrija apenas este trecho da redação (' + PW[part].name + '). Fórmula esperada: ' + PW[part].formula + '. Avalie por competência (C1 a C5, 0 a 200 cada) só no que se aplica a este trecho, indique erros de vírgula, ortografia, coesão, repertório e proposta, explique o motivo de cada correção em uma frase curta e mostre uma versão reescrita dos trechos mais fracos. Ao final, diga qual é meu erro mais frequente e sugira o próximo exercício.\n\n' +
-      'Tema: ' + THEMES[theme] + '\n\nTrecho (' + PW[part].name + '):\n' + text.trim();
+      'Tema: ' + THEMES[theme] + '\n\nTrecho (' + PW[part].name + '):\n' + text.trim() + '\n\n' + jsonGuide();
   }
   function copyText(txt) {
     if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(txt);
@@ -1449,9 +1474,10 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
   function advance() { if (shouldDuel()) startDuel(); else nextQuestion(); }
   function startDuel() {
     run.duelDone = true;
-    var parts = run.realm.duel, part = parts[(Math.floor(run.stage / 5) - 1) % parts.length];
+    var parts = run.realm.duel, part = parts[(Math.floor(run.stage / 5) - 1) % parts.length], theme = rint(THEMES.length), pr = save.plan && save.plan.proximo && !save.plan.proximoUsado ? save.plan.proximo : null;
+    if (pr) { part = pr.parte; if (pr.tema >= 0) theme = pr.tema; save.plan.proximoUsado = true; persist(); }
     tok++; phase = 'ask';
-    q = { kind: 'write', part: part, theme: rint(THEMES.length), label: 'Duelo de escrita: ' + PW[part].name, inst: PW[part].hint };
+    q = { kind: 'write', part: part, theme: theme, label: 'Duelo de escrita: ' + PW[part].name, inst: PW[part].hint };
     q.limit = PW[part].t + 8 * save.lv.clock;
     renderQ();
     $('fb').hidden = true; $('qact').hidden = false;
@@ -1482,6 +1508,199 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
     renderWrite(); renderHist(); show('write');
   }
 
+  /* ---------- treino personalizado: o Claude devolve um JSON e o jogo monta os exercícios ---------- */
+  var VALID_RULES = ['con', 'adj', 'abr', 'fch', 'adv', 'poi', 'enu', 'e'];
+  var RULE_HELP = 'con = conectivo no início da frase; adj = adjunto ou oração adverbial deslocada; abr = abre expressão intercalada; fch = fecha expressão intercalada; adv = antes de mas/porém/contudo; poi = antes de pois/por isso; enu = enumeração; e = antes de “e” com sujeitos diferentes';
+  var PERSONAL = {
+    id: 'personal', name: 'Treino do Mestre', kinds: ['plan'], duel: [],
+    bg: { s0: '#14282a', s1: '#3a7a62', hill: '#1f4a40', gnd: '#1f3430', edge: '#34584c', deco: 'tower' },
+    enemies: [['Gárgula do Erro', 'gargula'], ['Corvo da Repetição', 'corvo'], ['Escrivão Fantasma', 'espectro2']], boss: null
+  };
+  function knownCats() {
+    var out = Object.keys(CATS);
+    Object.keys(RULES).forEach(function (k) { if (k !== 'ext' && out.indexOf(RULES[k].n) < 0) out.push(RULES[k].n); });
+    return out;
+  }
+  function jsonGuide() {
+    return 'Formato da resposta: responda SOMENTE com um JSON válido, sem texto antes ou depois e sem markdown, porque vou colar a resposta num jogo de treino. ' +
+      'Ignore o pedido de responder em texto corrido: a correção inteira (notas, erros, reescrita, erro mais frequente e próximo exercício) deve ir dentro do JSON. Use exatamente estas chaves:\n' +
+      '{\n' +
+      '  "versao": 1,\n' +
+      '  "parte": "nome da parte corrigida",\n' +
+      '  "notas": {"C1": 0, "C2": 0, "C3": 0, "C4": 0, "C5": null},\n' +
+      '  "resumo": "2 frases honestas sobre o trecho",\n' +
+      '  "erro_mais_frequente": "uma categoria da lista abaixo",\n' +
+      '  "erros": [{"categoria": "uma categoria da lista", "trecho": "o que escrevi", "correcao": "como fica", "motivo": "uma frase curta"}],\n' +
+      '  "reescrita": "versão reescrita dos trechos mais fracos",\n' +
+      '  "proximo_desafio": {"parte": "intro | dev | conc | rep | virgula", "tema": 0},\n' +
+      '  "treino": [\n' +
+      '    {"tipo": "virgula", "frase": "frase com as vírgulas CORRETAS", "regras": ["con", "adj"]},\n' +
+      '    {"tipo": "escolha", "categoria": "Escrita e ortografia", "enunciado": "frase com ____ no lugar da dúvida", "certa": "...", "erradas": ["...", "..."], "porque": "uma frase"},\n' +
+      '    {"tipo": "reescrever", "original": "frase com o erro, tirada do meu texto", "correta": "frase corrigida", "categoria": "uma categoria da lista", "porque": "uma frase"}\n' +
+      '  ]\n' +
+      '}\n' +
+      'Regras do JSON:\n' +
+      '- notas de 0 a 200; use null em C5 quando não se aplica ao trecho.\n' +
+      '- categorias válidas: ' + knownCats().join(' | ') + '.\n' +
+      '- em "virgula", escreva a frase só com as vírgulas corretas e uma regra por vírgula, na ordem em que as vírgulas aparecem (frase sem vírgula usa "regras": []). Regras: ' + RULE_HELP + '.\n' +
+      '- em "escolha", use ____ onde vai a resposta e 2 ou 3 opções erradas.\n' +
+      '- "treino": de 10 a 14 exercícios que ataquem os meus erros deste trecho, com pelo menos 5 de virgula, 3 de escolha e 2 de reescrever, em frases curtas (até 30 palavras) sobre temas de redação.\n' +
+      '- "proximo_desafio": a parte que eu devo escrever a seguir e o tema (número): ' + THEMES.map(function (t, i) { return i + ' = ' + t; }).join('; ') + '.';
+  }
+
+  function extractJson(txt) {
+    var s = String(txt).trim().replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '');
+    var a = s.indexOf('{'), b = s.lastIndexOf('}');
+    if (a < 0 || b <= a) throw new Error('Não achei um JSON no texto colado.');
+    return JSON.parse(s.slice(a, b + 1));
+  }
+  var cleanStr = function (v, max) { return typeof v === 'string' ? v.replace(/\s+/g, ' ').trim().slice(0, max || 400) : ''; };
+  function buildPlan(raw) {
+    var cats = knownCats(), items = [], dropped = 0, list = Array.isArray(raw.treino) ? raw.treino.slice(0, 40) : [];
+    var catOf = function (c) { c = cleanStr(c, 80); return cats.indexOf(c) >= 0 ? c : 'Escrita e ortografia'; };
+    list.forEach(function (it) {
+      if (!it || typeof it !== 'object') { dropped++; return; }
+      var tipo = cleanStr(it.tipo, 20).toLowerCase(), r = null;
+      if (tipo === 'virgula') {
+        var f = cleanStr(it.frase, 400), regs = Array.isArray(it.regras) ? it.regras.map(function (x) { return cleanStr(x, 10); }) : [];
+        var n = (f.match(/,/g) || []).length, badTok = f.split(/\s+/).some(function (tk) { return tk.slice(0, -1).indexOf(',') >= 0; });
+        if (f.length >= 10 && n === regs.length && !badTok && regs.every(function (x) { return VALID_RULES.indexOf(x) >= 0; })) r = { t: 'v', frase: f, regras: regs };
+      } else if (tipo === 'escolha') {
+        var en = cleanStr(it.enunciado, 400), ce = cleanStr(it.certa, 120), wr = [];
+        (Array.isArray(it.erradas) ? it.erradas : []).forEach(function (x) { x = cleanStr(x, 120); if (x && x !== ce && wr.indexOf(x) < 0) wr.push(x); });
+        if (en.indexOf('____') >= 0 && ce && wr.length >= 2) r = { t: 'e', enunciado: en, certa: ce, erradas: wr.slice(0, 3), porque: cleanStr(it.porque, 300) || 'Confira a regra com o Claude.', cat: catOf(it.categoria) };
+      } else if (tipo === 'reescrever') {
+        var o = cleanStr(it.original, 400), c = cleanStr(it.correta, 400);
+        if (o.length >= 8 && c.length >= 8 && o !== c) r = { t: 'r', original: o, correta: c, porque: cleanStr(it.porque, 300) || 'Confira a regra com o Claude.', cat: catOf(it.categoria) };
+      }
+      if (r) items.push(r); else dropped++;
+    });
+    if (!items.length) throw new Error('Nenhum exercício válido em “treino”. Peça ao Claude para seguir o formato do pedido.');
+    var nt = raw.notas && typeof raw.notas === 'object' ? raw.notas : {}, notas = {};
+    ['C1', 'C2', 'C3', 'C4', 'C5'].forEach(function (k) { var v = nt[k]; notas[k] = typeof v === 'number' && v >= 0 && v <= 200 ? Math.round(v) : null; });
+    var erros = (Array.isArray(raw.erros) ? raw.erros : []).slice(0, 12).map(function (e) {
+      return e && typeof e === 'object' ? { cat: catOf(e.categoria), trecho: cleanStr(e.trecho, 300), correcao: cleanStr(e.correcao, 300), motivo: cleanStr(e.motivo, 300) } : null;
+    }).filter(Boolean);
+    var focus = [], erro = cleanStr(raw.erro_mais_frequente, 80);
+    if (erro) focus.push(catOf(erro));
+    erros.forEach(function (e) { if (focus.indexOf(e.cat) < 0) focus.push(e.cat); });
+    var pr = raw.proximo_desafio && typeof raw.proximo_desafio === 'object' ? raw.proximo_desafio : null, prox = null;
+    if (pr && PW[cleanStr(pr.parte, 20)]) prox = { parte: cleanStr(pr.parte, 20), tema: (typeof pr.tema === 'number' && pr.tema >= 0 && pr.tema < THEMES.length) ? Math.floor(pr.tema) : -1 };
+    var order = shuffle(items.map(function (_, i) { return i; }));
+    return { dropped: dropped, plan: {
+      criado: new Date().toLocaleDateString('pt-BR'), parte: cleanStr(raw.parte, 60), notas: notas, resumo: cleanStr(raw.resumo, 500), erro: erro, focus: focus, erros: erros,
+      reescrita: cleanStr(raw.reescrita, 1200), proximo: prox, proximoUsado: false, items: items, queue: order, total: items.length, solved: 0, skipped: 0, done: false } };
+  }
+  function planActive() { return !!(save.plan && !save.plan.done && save.plan.queue.length); }
+  function planAnswered(idx, ok) {
+    var pl = save.plan, it = pl.items[idx];
+    if (!pl || !it) return;
+    pl.queue.shift();
+    if (ok) pl.solved++; else { it.n = (it.n || 0) + 1; if (it.n >= 3) pl.skipped++; else pl.queue.push(idx); }
+    persist();
+  }
+  function focusCommaIdx(d) {
+    var pl = save.plan;
+    if (!planActive() || !pl.focus.length || Math.random() < 0.5) return -1;
+    var pool = [];
+    BANK.forEach(function (b, i) {
+      if (b[0] > d || run.recent.indexOf('c:' + i) >= 0 || !b[2]) return;
+      if (b[2].split(' ').some(function (c) { return pl.focus.indexOf(RULES[c].n) >= 0; })) pool.push(i);
+    });
+    if (!pool.length) return -1;
+    var idx = pool[rint(pool.length)];
+    run.recent.push('c:' + idx); if (run.recent.length > 16) run.recent.shift();
+    return idx;
+  }
+  function makePersonalQuestion() {
+    var pl = save.plan, idx = pl.queue[0], it = pl.items[idx], b, st = run.stage;
+    if (it.t === 'v') {
+      b = build([[1, it.frase, it.regras.join(' ')]]);
+      var mode = save.mode === 'mixed' ? (Math.random() < 0.4 ? 'type' : 'click') : save.mode;
+      b.kind = 'comma'; b.mode = mode; b.user = {}; b.T = Math.max(22, 8 + 1.5 * b.words.length); b.slow = mode === 'type' ? 1.35 : 1;
+      b.label = 'Treino: vírgula';
+      b.inst = mode === 'type' ? 'Digite as vírgulas no texto. Não mude as palavras.' : 'Toque nos espaços onde vai vírgula. Toque de novo para tirar.';
+    } else if (it.t === 'e') {
+      b = { kind: 'choice', cat: it.cat, label: 'Treino: escolha', inst: 'Escolha a forma correta.', ctx: blank(it.enunciado), why: it.porque, T: 20,
+        opts: shuffle([opt(it.certa, true)].concat(it.erradas.map(function (w) { return opt(w, false); }))) };
+    } else {
+      b = { kind: 'retype', cat: it.cat, label: 'Treino: reescrever', inst: 'Reescreva a frase corrigindo o erro. Mude só o necessário.', item: it, T: 30 + 2 * it.original.split(/\s+/).length };
+    }
+    b.pidx = idx;
+    var base = Math.max(b.T * 0.5, b.T * (1 - 0.0364 * (st - 1))) + 1.5 * save.lv.clock;
+    b.limit = Math.round(base * (b.slow || 1) * 10) / 10;
+    return b;
+  }
+  var normRe = function (s) { return String(s).toLowerCase().replace(/[“”"]/g, '').replace(/\s+/g, ' ').replace(/\s+,/g, ',').trim().replace(/[.!]+$/, ''); };
+  KIND.retype = {
+    render: function (q) {
+      $('qbox').innerHTML = '<div class="scroll plain"><p><b>Frase com erro:</b></p><p>' + esc(q.item.original) + '</p></div>' +
+        '<div class="scroll"><textarea id="qre" rows="3" spellcheck="false" autocomplete="off" aria-label="Frase corrigida">' + esc(q.item.original) + '</textarea></div>';
+      var ta = $('qre'); ta.focus(); try { ta.setSelectionRange(ta.value.length, ta.value.length); } catch (e) { /* ignora */ }
+    },
+    check: function (q, timeout) {
+      var typed = $('qre').value, ok = !timeout && normRe(typed) === normRe(q.item.correta), html = '';
+      if (!ok) html = '<div class="scroll plain"><p><b>Você escreveu:</b> ' + esc(typed) + '</p><p><b>Versão certa:</b> ' + esc(q.item.correta) + '</p></div><p>' + esc(q.item.porque) + '</p>';
+      return { ok: ok, cats: ok ? [] : [q.cat], body: html, head: timeout ? 'Tempo esgotado!' : 'Ainda não está igual à versão corrigida.', okLine: q.item.porque };
+    }
+  };
+  function finishPersonal() {
+    var pl = save.plan;
+    pl.done = true; persist();
+    shopCtx = 'plandone';
+    var prox = pl.proximo ? ' Próximo desafio: ' + PW[pl.proximo.parte].name + (pl.proximo.tema >= 0 ? ' sobre “' + THEMES[pl.proximo.tema] + '”' : '') + '.' : ' Próximo desafio: o duelo contra o próximo chefe ou a oficina.';
+    $('shtitle').textContent = 'Treino concluído!';
+    $('shbanner').textContent = 'Você acertou ' + pl.solved + ' de ' + pl.total + ' exercícios' + (pl.skipped ? ' e ' + pl.skipped + ' ficaram para rever com o Claude' : '') + '.' + prox + ' Depois do desafio, copie o pedido para o Claude e cole o novo JSON.';
+    $('shgo').textContent = 'Voltar ao mapa';
+    renderShop(); show('shop');
+  }
+  function startPersonal() {
+    if (!planActive()) return;
+    save.last = save.last || 0;
+    run = { realm: PERSONAL, ri: -1, personal: true, stage: 1, hp: maxHp(), combo: 0, score: 0, enemy: null, recent: [] };
+    startBattle();
+  }
+
+  function planLabel(p) { return PW[p.parte].name + (p.tema >= 0 ? ' · ' + THEMES[p.tema] : ''); }
+  function renderPlan() {
+    var pl = save.plan, el = $('planstatus'), sum = $('plansum');
+    if (!pl) {
+      el.innerHTML = 'Nenhum treino carregado ainda. Faça um duelo ou a oficina, copie o pedido, cole no Claude e traga a resposta (JSON) para cá.';
+      sum.innerHTML = '';
+    } else {
+      var nt = ['C1', 'C2', 'C3', 'C4', 'C5'].filter(function (k) { return pl.notas[k] != null; }).map(function (k) { return k + ' ' + pl.notas[k]; }).join(' · ');
+      el.innerHTML = '<b>Treino de ' + esc(pl.criado) + '</b>' + (pl.parte ? ' · parte corrigida: ' + esc(pl.parte) : '') + '<br>' +
+        (nt ? 'Notas: ' + esc(nt) + '<br>' : '') +
+        (pl.erro ? 'Erro mais frequente: <b>' + esc(pl.erro) + '</b><br>' : '') +
+        (pl.focus.length ? 'Foco dos reinos: ' + esc(pl.focus.join(', ')) + '<br>' : '') +
+        'Exercícios: <b>' + pl.solved + ' de ' + pl.total + '</b> feitos' + (pl.skipped ? ' (' + pl.skipped + ' para rever)' : '') + (pl.done ? ' · concluído' : '') + '<br>' +
+        (pl.proximo ? 'Próximo desafio: <b>' + esc(planLabel(pl.proximo)) + '</b>' : 'Próximo desafio: o duelo do próximo chefe.');
+      sum.innerHTML = (pl.resumo ? '<p>' + esc(pl.resumo) + '</p>' : '') +
+        (pl.erros.length ? '<ul>' + pl.erros.map(function (e) { return '<li><b>' + esc(e.cat) + ':</b> ' + esc(e.trecho) + ' → ' + esc(e.correcao) + (e.motivo ? '. ' + esc(e.motivo) : '') + '</li>'; }).join('') + '</ul>' : '') +
+        (pl.reescrita ? '<p><b>Reescrita:</b> ' + esc(pl.reescrita) + '</p>' : '');
+    }
+    var can = planActive();
+    $('planstart').setAttribute('aria-disabled', can ? 'false' : 'true');
+    $('planstart').textContent = can ? 'Começar treino (' + save.plan.queue.length + ' restantes)' : 'Começar treino';
+    $('plantoof').hidden = !(pl && pl.proximo);
+    $('plansumbox').hidden = !pl;
+  }
+  function openPlan() { $('planmsg').textContent = ''; renderPlan(); show('plan'); }
+  function loadPlan() {
+    var txt = $('planjson').value;
+    if (!txt.trim()) { $('planmsg').textContent = 'Cole a resposta do Claude no campo acima.'; return; }
+    try {
+      var raw = extractJson(txt), r = buildPlan(raw), pl = r.plan;
+      save.plan = pl;
+      pl.erros.forEach(function (e) { save.miss[e.cat] = (save.miss[e.cat] || 0) + 2; });
+      persist(); $('planjson').value = '';
+      $('planmsg').textContent = 'Treino criado com ' + pl.total + ' exercícios' + (r.dropped ? ' (' + r.dropped + ' descartados por formato inválido)' : '') + '. Os reinos também vão reforçar: ' + (pl.focus.join(', ') || 'seus erros') + '.';
+      sfx.buy(); renderPlan(); updHud();
+    } catch (e) {
+      $('planmsg').textContent = 'Não consegui ler: ' + (e && e.message ? e.message : 'JSON inválido') + ' Confira se colou a resposta inteira.';
+    }
+  }
+
   /* ---------- eventos ---------- */
   $('realms').addEventListener('click', function (e) {
     var b = e.target.closest('.realm');
@@ -1497,7 +1716,7 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
   $('mwrite').addEventListener('click', openWrite);
   $('shgo').addEventListener('click', function () {
     if (shopCtx === 'victory') { run.stage++; startBattle(); }
-    else if (shopCtx === 'dead') startRun(run.ri);
+    else if (shopCtx === 'dead') { if (run.personal) startPersonal(); else startRun(run.ri); }
     else toMenu();
   });
   $('shmenu').addEventListener('click', toMenu);
@@ -1566,7 +1785,7 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
     var r = evalPart(text, part, theme), bonus = r.score === 1 && save.lastReward !== text;
     copyText(buildPartPrompt(part, theme, text)).then(function () {
       if (bonus) { save.lastReward = text; save.coins += 20; persist(); updHud(); }
-      $('wmsg').textContent = 'Pedido copiado. Cole no Claude para receber a correção.' + (bonus ? ' Parágrafo perfeito no checklist: +20 moedas.' : '');
+      $('wmsg').textContent = 'Pedido copiado. Cole no Claude e traga a resposta (JSON) em Treino personalizado.' + (bonus ? ' Parágrafo perfeito no checklist: +20 moedas.' : '');
     }, function () {
       $('wmsg').textContent = 'Não consegui copiar sozinho. Selecione o texto e copie manualmente.';
     });
@@ -1575,8 +1794,24 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
   $('fb').addEventListener('click', function (e) {
     var b = e.target.closest('#bcopyduel');
     if (!b || !q || q.kind !== 'write') return;
-    copyText(buildPartPrompt(q.part, q.theme, q.lastText || '')).then(function () { b.textContent = 'Pedido copiado!'; }, function () { b.textContent = 'Não consegui copiar'; });
+    copyText(buildPartPrompt(q.part, q.theme, q.lastText || '')).then(function () { b.textContent = 'Pedido copiado! Cole no Claude e traga o JSON em Treino personalizado.'; }, function () { b.textContent = 'Não consegui copiar'; });
   });
+
+  $('mplan').addEventListener('click', openPlan);
+  $('planload').addEventListener('click', loadPlan);
+  $('planstart').addEventListener('click', function () { if ($('planstart').getAttribute('aria-disabled') !== 'true') startPersonal(); });
+  $('plantoof').addEventListener('click', function () {
+    var p = save.plan && save.plan.proximo;
+    if (!p) return;
+    save.part = p.parte; if (p.tema >= 0) save.theme = p.tema;
+    persist(); openWrite();
+  });
+  $('planclear').addEventListener('click', function () {
+    if (save.plan && !window.confirm('Apagar o treino atual?')) return;
+    save.plan = null; persist(); $('planmsg').textContent = 'Treino apagado.'; renderPlan();
+  });
+  $('planback').addEventListener('click', toMenu);
+  $('wpaste').addEventListener('click', openPlan);
 
   /* ---------- desenho ---------- */
   var cv = $('cv'), cx = cv.getContext('2d'), DPR = Math.min(2, window.devicePixelRatio || 1);
