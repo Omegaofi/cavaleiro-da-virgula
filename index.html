@@ -1,0 +1,1652 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cavaleiro da Vírgula</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Pixelify+Sans:wght@500;700&display=swap">
+<style>
+/* Layout: HUD no topo, arena em pixel art, e embaixo a tela da vez (mapa, batalha, loja ou sala da redação).
+   Visual escuro de propósito (jogo noturno); o pergaminho claro é onde o texto a corrigir aparece. */
+:root {
+  --ink: #10142a;
+  --panel: #1b2142;
+  --panel2: #262d58;
+  --line: #3a4280;
+  --text: #e9ecfa;
+  --muted: #a0a8d6;
+  --gold: #f2b84b;
+  --gold-deep: #a97a1e;
+  --ok: #4cc38a;
+  --bad: #ef5b5b;
+  --paper: #f3e8c9;
+  --paper-ink: #2a2216;
+  --comma: #b3261e;
+  --f-display: "Pixelify Sans", "Courier New", monospace;
+  --f-text: "Literata", Georgia, "Times New Roman", serif;
+  color-scheme: dark;
+}
+[hidden] { display: none !important; }
+html, body { height: auto; }
+body {
+  background: var(--ink);
+  color: var(--text);
+  font-family: var(--f-text);
+  font-size: 16px;
+  line-height: 1.5;
+  margin: 0;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 14px 48px;
+}
+.wrap { max-width: 760px; margin: 0 auto; display: grid; gap: 14px; }
+.wrap > * { min-width: 0; }
+
+.hud { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
+.hud h1 { font: 700 clamp(22px, 5vw, 30px)/1.1 var(--f-display); margin: 0; color: var(--gold); letter-spacing: .02em; text-wrap: balance; }
+.stats { display: flex; flex-wrap: wrap; gap: 6px 10px; font: 500 15px/1 var(--f-display); color: var(--muted); align-items: center; }
+.stats b { color: var(--text); font-weight: 700; font-variant-numeric: tabular-nums; }
+.chip { background: var(--panel); border: 2px solid var(--line); border-radius: 4px; padding: 6px 9px; }
+.snd { font: 500 14px/1 var(--f-display); color: var(--muted); background: transparent; border: 2px solid var(--line); border-radius: 4px; padding: 6px 9px; cursor: pointer; }
+
+.arena { display: grid; gap: 8px; }
+.bars { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.bar-l { display: flex; justify-content: space-between; gap: 8px; font: 500 14px/1.2 var(--f-display); margin-bottom: 4px; color: var(--muted); }
+.bar-l b { color: var(--text); font-weight: 500; font-variant-numeric: tabular-nums; }
+.bar { height: 12px; background: var(--panel); border: 2px solid var(--line); border-radius: 3px; overflow: hidden; }
+.bar > i { display: block; height: 100%; width: 100%; background: var(--ok); transition: width .25s; }
+.bar.foe > i { background: var(--bad); }
+.bars .foe-col { text-align: right; }
+.bars .foe-col .bar-l { flex-direction: row-reverse; }
+canvas { display: block; width: 100%; height: auto; aspect-ratio: 480 / 200; image-rendering: pixelated; border: 2px solid var(--line); border-radius: 6px; background: #141a45; }
+
+.panel { background: var(--panel); border: 2px solid var(--line); border-radius: 6px; padding: 18px; display: grid; gap: 14px; }
+.panel[hidden], .fb[hidden], .bars[hidden] { display: none; }
+.panel h2 { font: 700 22px/1.2 var(--f-display); margin: 0; color: var(--text); text-wrap: balance; }
+.panel h3 { font: 700 18px/1.2 var(--f-display); margin: 0; color: var(--gold); }
+.lead { margin: 0; color: var(--muted); max-width: 62ch; }
+.btn {
+  font: 700 18px/1 var(--f-display); color: var(--ink); background: var(--gold);
+  border: 0; border-radius: 4px; padding: 13px 20px; cursor: pointer;
+  box-shadow: 0 4px 0 var(--gold-deep); transition: transform .06s, box-shadow .06s;
+}
+.btn:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--gold-deep); }
+.btn.ghost { background: var(--panel2); color: var(--text); box-shadow: 0 4px 0 #161a38; border: 2px solid var(--line); padding: 11px 18px; }
+.btn.ghost:active { box-shadow: 0 1px 0 #161a38; }
+.btn[disabled], .btn[aria-disabled="true"] { opacity: .45; cursor: not-allowed; box-shadow: none; transform: none; }
+.actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.hint { font-size: 14px; color: var(--muted); margin: 0; }
+button:focus-visible, textarea:focus-visible, summary:focus-visible, select:focus-visible, input:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+
+.seg { border: 0; padding: 0; margin: 0; display: grid; gap: 8px; }
+.seg legend { font: 500 15px/1 var(--f-display); color: var(--muted); padding: 0; margin-bottom: 8px; }
+.seg .opts { display: flex; flex-wrap: wrap; gap: 8px; }
+.seg button { font: 500 16px/1.1 var(--f-display); color: var(--text); background: var(--panel2); border: 2px solid var(--line); border-radius: 4px; padding: 10px 14px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--gold); color: var(--ink); border-color: var(--gold); }
+
+.realms { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+.realm { text-align: left; background: var(--panel2); border: 2px solid var(--line); border-radius: 6px; padding: 12px 14px; color: var(--text); font: inherit; cursor: pointer; display: grid; gap: 5px; align-content: start; }
+.realm:not([aria-disabled="true"]):hover { border-color: var(--gold); }
+.realm .rt { font: 700 17px/1.2 var(--f-display); color: var(--gold); }
+.realm .rs { font: 500 16px/1 var(--f-display); letter-spacing: .12em; color: var(--gold); }
+.realm .rd { font-size: 14px; color: var(--muted); line-height: 1.4; }
+.realm .rb { font: 500 14px/1.2 var(--f-display); color: var(--text); }
+.realm[aria-disabled="true"] { opacity: .5; cursor: not-allowed; }
+
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 0; }
+.facts div { background: var(--panel2); border-radius: 4px; padding: 10px 12px; }
+.facts dt { font: 500 14px/1 var(--f-display); color: var(--muted); margin-bottom: 6px; }
+.facts dd { margin: 0; font: 700 22px/1 var(--f-display); font-variant-numeric: tabular-nums; }
+.weak { background: var(--panel2); border-radius: 4px; padding: 12px 14px; margin: 0; }
+.weak[hidden] { display: none; }
+.weak b { color: var(--gold); font-weight: 600; }
+details.rules { background: var(--panel2); border-radius: 4px; padding: 10px 14px; }
+details.rules summary { cursor: pointer; font: 500 16px/1.3 var(--f-display); }
+details.rules ol, details.rules ul { margin: 10px 0 2px; padding-left: 22px; display: grid; gap: 4px; }
+details.rules p { margin: 10px 0 2px; }
+
+.timer { height: 12px; background: var(--ink); border: 2px solid var(--line); border-radius: 3px; overflow: hidden; }
+.timer > i { display: block; height: 100%; width: 100%; background: var(--ok); }
+.timer.mid > i { background: var(--gold); }
+.timer.low > i { background: var(--bad); }
+.qhead { display: flex; justify-content: space-between; gap: 12px; font: 500 15px/1.2 var(--f-display); color: var(--muted); }
+.qhead b { color: var(--text); font-weight: 700; font-variant-numeric: tabular-nums; }
+.inst { margin: 0; font: 500 17px/1.3 var(--f-display); }
+.scroll {
+  background: var(--paper); color: var(--paper-ink); border-radius: 6px; padding: 16px 18px;
+  font-size: clamp(18px, 2.2vw + 12px, 23px); line-height: 2.1; max-width: 100%; overflow-wrap: anywhere;
+  box-shadow: inset 0 0 0 3px #d9c99b;
+}
+.scroll.plain { font-size: clamp(16px, 1.8vw + 11px, 19px); line-height: 1.6; }
+.scroll.plain p { margin: 0 0 6px; }
+.scroll.plain p:last-child { margin: 0; }
+.scroll textarea {
+  display: block; width: 100%; box-sizing: border-box; font: inherit; line-height: 1.6; color: inherit;
+  background: #fbf4de; border: 2px dashed #b9a770; border-radius: 4px; padding: 10px 12px; resize: vertical;
+}
+.scroll textarea:focus-visible { outline-color: var(--comma); }
+.blank { display: inline-block; min-width: 4.5ch; border-bottom: 3px solid var(--comma); text-align: center; color: var(--comma); }
+.gap {
+  display: inline-block; position: relative; width: .3em; height: 1.4em; vertical-align: middle;
+  margin: 0; padding: 0; border: 0; background: none; cursor: pointer; text-align: left;
+  font: 700 1.3em/1 var(--f-text); color: var(--comma); border-radius: 3px;
+}
+.gap::before { content: ""; position: absolute; left: 50%; bottom: .12em; width: 2px; height: .38em; background: rgba(42, 34, 22, .3); }
+.gap[aria-pressed="true"]::before { display: none; }
+.gap::after { content: ""; position: absolute; inset: -.3em -.6em; }
+.gap:hover, .gap:focus-visible { background: rgba(179, 38, 30, .18); }
+.gap:focus-visible { outline-color: var(--comma); }
+
+.optlist { display: grid; gap: 8px; margin-top: 4px; }
+.opt {
+  position: relative; text-align: left; font: 500 16px/1.4 var(--f-text); color: var(--text); background: var(--panel2);
+  border: 2px solid var(--line); border-radius: 6px; padding: 10px 12px 10px 40px; cursor: pointer; overflow-wrap: anywhere;
+}
+.opt:hover { border-color: var(--gold); }
+.opt .kb { position: absolute; left: 10px; top: 10px; min-width: 20px; text-align: center; font: 700 14px/20px var(--f-display); color: var(--muted); }
+.opt[aria-pressed="true"] { background: var(--gold); color: var(--ink); border-color: var(--gold); }
+.opt[aria-pressed="true"] .kb { color: var(--ink); }
+.slot { border: 0; padding: 0; margin: 6px 0 0; display: grid; gap: 6px; }
+.slot legend { font: 700 15px/1.2 var(--f-display); color: var(--gold); padding: 0; margin-bottom: 6px; }
+
+.fb { border-radius: 6px; padding: 14px 16px; display: grid; gap: 10px; }
+.fb.good { background: #17382f; }
+.fb.badc { background: #40202a; }
+.fb h3 { margin: 0; font: 700 20px/1.2 var(--f-display); }
+.fb.good h3 { color: var(--ok); }
+.fb.badc h3 { color: var(--bad); }
+.fb .scroll { font-size: clamp(16px, 1.8vw + 11px, 20px); line-height: 1.7; }
+.fb ul, .fb ol { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+.fb p { margin: 0; }
+.cm { font-weight: 700; padding: 0 1px; border-radius: 2px; }
+.cm.ok { color: #0f7a46; }
+.cm.miss { color: #fff; background: var(--comma); }
+.cm.extra { color: var(--comma); text-decoration: line-through; }
+.tag-ok { color: var(--ok); font-weight: 700; }
+.tag-bad { color: var(--bad); font-weight: 700; }
+
+.banner { margin: 0; background: var(--panel2); border-radius: 4px; padding: 12px 14px; }
+.shop { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.shop li { display: grid; grid-template-columns: 1fr auto; gap: 6px 14px; align-items: center; background: var(--panel2); border-radius: 4px; padding: 12px 14px; }
+.shop .nm { font: 700 17px/1.2 var(--f-display); }
+.shop .fx { font-size: 14px; color: var(--muted); }
+.shop .sk { font-size: 14px; color: var(--gold); }
+.pips { display: flex; gap: 3px; margin-top: 6px; }
+.pips i { width: 12px; height: 8px; background: var(--ink); border: 1px solid var(--line); }
+.pips i.on { background: var(--gold); border-color: var(--gold); }
+.shop .btn { padding: 10px 14px; font-size: 16px; white-space: nowrap; }
+.wardrobe { background: var(--panel2); border-radius: 4px; padding: 12px 14px; display: grid; gap: 10px; }
+.wardrobe p { margin: 0; }
+.swatches { display: flex; flex-wrap: wrap; gap: 8px; }
+.sw { width: 44px; height: 44px; border: 3px solid var(--line); border-radius: 6px; cursor: pointer; padding: 0; }
+.sw[aria-pressed="true"] { border-color: #fff; }
+.sw[aria-disabled="true"] { opacity: .3; cursor: not-allowed; }
+
+.fld { display: grid; gap: 6px; font: 500 15px/1 var(--f-display); color: var(--muted); }
+select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--text); background: var(--panel2); border: 2px solid var(--line); border-radius: 4px; padding: 10px 12px; max-width: 100%; }
+.write { display: block; width: 100%; box-sizing: border-box; font: 400 17px/1.6 var(--f-text); color: var(--paper-ink); background: #fbf4de; border: 2px solid #b9a770; border-radius: 6px; padding: 12px 14px; min-height: 300px; resize: vertical; }
+.write:focus-visible { outline-color: var(--gold); }
+.check { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.check li { background: var(--panel2); border-radius: 4px; padding: 10px 12px; display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; align-items: baseline; }
+.check .st { font: 700 14px/1.3 var(--f-display); min-width: 52px; }
+.check .st.ok { color: var(--ok); }
+.check .st.warn { color: var(--gold); }
+.check .st.idle { color: var(--muted); }
+.check .dt { grid-column: 2; font-size: 14px; color: var(--muted); }
+.check label { cursor: pointer; display: flex; gap: 8px; align-items: baseline; }
+.hist { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+.noterow { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; }
+
+@media (max-width: 460px) {
+  .shop li { grid-template-columns: 1fr; }
+  .bars { gap: 8px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bar > i { transition: none; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="hud">
+    <h1>Cavaleiro da Vírgula</h1>
+    <div class="stats" aria-live="off">
+      <span class="chip" id="rnchip">Reino <b id="rn">–</b></span>
+      <span class="chip">Fase <b id="st">1</b></span>
+      <span class="chip">Moedas <b id="co">0</b></span>
+      <span class="chip">Pontos <b id="sc">0</b></span>
+      <span class="chip">Combo <b id="cb">0</b></span>
+      <button class="snd" id="snd" type="button">Som: ligado</button>
+    </div>
+  </header>
+
+  <section class="arena" aria-label="Arena">
+    <div class="bars" id="bars" hidden>
+      <div>
+        <div class="bar-l"><span>Cavaleiro</span><b id="htxt">100/100</b></div>
+        <div class="bar"><i id="hfill"></i></div>
+      </div>
+      <div class="foe-col">
+        <div class="bar-l"><span id="ename">Inimigo</span><b id="etxt">0/0</b></div>
+        <div class="bar foe"><i id="efill"></i></div>
+      </div>
+    </div>
+    <canvas id="cv" width="480" height="200" aria-label="Cavaleiro enfrentando o inimigo"></canvas>
+  </section>
+
+  <main>
+    <section class="panel" id="sc-menu">
+      <h2>Escolha seu reino</h2>
+      <p class="lead">Cada reino treina um exercício do seu treino de redação. Vença o chefe da fase 5 para liberar o próximo reino e ganhar uma capa nova. As estrelas chegam nas fases 5, 10 e 15.</p>
+      <div class="realms" id="realms"></div>
+      <fieldset class="seg" id="modeseg">
+        <legend>Desafio de vírgula (vale para o Reino das Vírgulas e para o Castelo)</legend>
+        <div class="opts">
+          <button type="button" data-mode="mixed" aria-pressed="true">Misto</button>
+          <button type="button" data-mode="click" aria-pressed="false">Só tocar nos espaços</button>
+          <button type="button" data-mode="type" aria-pressed="false">Só digitar o texto</button>
+        </div>
+      </fieldset>
+      <div class="actions">
+        <button class="btn" id="mwrite" type="button">Sala da redação</button>
+        <button class="btn ghost" id="mshop" type="button">Loja e guarda-roupa</button>
+      </div>
+      <dl class="facts" id="mfacts"></dl>
+      <p class="weak" id="weak" hidden></p>
+      <details class="rules">
+        <summary>As regras de vírgula do jogo</summary>
+        <ol>
+          <li>Depois de conectivo no início da frase: <i>Ademais,</i> <i>Nesse sentido,</i> <i>Por fim,</i></li>
+          <li>Antes e depois de expressão intercalada: <i>Ademais, segundo a revista The Economist, os testes caíram.</i></li>
+          <li>Depois de adjunto adverbial deslocado: <i>Com o advento da IA, os testes caíram.</i></li>
+          <li>Nunca separe o sujeito do verbo.</li>
+          <li>Antes de <i>pois</i>, <i>porém</i>, <i>mas</i> e <i>contudo</i>.</li>
+          <li>Em enumerações, vírgula entre os itens, mas não antes do <i>e</i> final.</li>
+        </ol>
+      </details>
+      <details class="rules">
+        <summary>As fórmulas do treino</summary>
+        <p><b>Proposta de intervenção (5 elementos):</b> agente específico + ação + meio + finalidade + detalhamento.</p>
+        <p><b>Repertório em 3 frases:</b> (1) apresento a obra ou o dado, (2) explico o que acontece nela, (3) conecto com a tese.</p>
+        <p><b>Estrutura em 4 parágrafos:</b> introdução (contexto + tese) → D1 (tópico frasal + explicação + repertório + ligação com a tese) → D2 (idem) → conclusão (retoma a tese + proposta completa).</p>
+      </details>
+    </section>
+
+    <section class="panel" id="sc-battle" hidden>
+      <div class="timer" id="timer"><i id="tfill"></i></div>
+      <div class="qhead"><span id="qmode"></span><span>Tempo <b id="qtime">0</b>s</span></div>
+      <p class="inst" id="qinst"></p>
+      <div id="qbox"></div>
+      <div class="actions" id="qact">
+        <button class="btn" id="bgo" type="button">Golpear</button>
+        <span class="hint" id="qhint">Enter também golpeia</span>
+      </div>
+      <div class="fb" id="fb" hidden></div>
+    </section>
+
+    <section class="panel" id="sc-shop" hidden>
+      <h2 id="shtitle">Loja do ferreiro</h2>
+      <p class="banner" id="shbanner"></p>
+      <ul class="shop" id="shlist"></ul>
+      <div class="wardrobe" id="shward"></div>
+      <div class="actions">
+        <button class="btn" id="shgo" type="button">Continuar</button>
+        <button class="btn ghost" id="shmenu" type="button">Mapa</button>
+      </div>
+    </section>
+
+    <section class="panel" id="sc-write" hidden>
+      <h2>Sala da redação (Modo 4)</h2>
+      <p class="lead">Escreva a redação completa em 4 parágrafos, confira o checklist e copie o pedido pronto para o Claude corrigir com nota de C1 a C5. Depois registre a nota para ver sua evolução.</p>
+      <label class="fld">Tema <select id="wtheme"></select></label>
+      <div class="actions"><button class="btn ghost" id="wrand" type="button">Sortear tema</button></div>
+      <textarea class="write" id="wtext" spellcheck="true" aria-label="Sua redação" placeholder="Escreva aqui. Separe os 4 parágrafos com uma linha em branco."></textarea>
+      <p class="hint" id="wcount"></p>
+      <ul class="check" id="wcheck"></ul>
+      <div class="actions">
+        <button class="btn" id="wcopy" type="button">Copiar pedido para o Claude</button>
+        <button class="btn ghost" id="wclear" type="button">Limpar texto</button>
+        <button class="btn ghost" id="wback" type="button">Mapa</button>
+      </div>
+      <p class="hint" id="wmsg" role="status"></p>
+      <div class="noterow">
+        <label class="fld">Nota que o Claude deu (0 a 1000) <input type="number" id="wnote" min="0" max="1000" step="10" inputmode="numeric"></label>
+        <button class="btn ghost" id="wsave" type="button">Registrar nota (+60 moedas)</button>
+      </div>
+      <h3>Sua evolução</h3>
+      <ol class="hist" id="whist"></ol>
+    </section>
+  </main>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+  var rint = function (n) { return Math.floor(Math.random() * n); };
+  function shuffle(a) {
+    var b = a.slice(), i, j, t;
+    for (i = b.length - 1; i > 0; i--) { j = rint(i + 1); t = b[i]; b[i] = b[j]; b[j] = t; }
+    return b;
+  }
+
+  /* DATA START */
+  /* ---------- vírgula ---------- */
+  var RULES = {
+    con: { n: 'Conectivo no início', t: 'Depois de conectivo no início da frase (Ademais, Portanto, Por fim, Nesse sentido…) vai vírgula.' },
+    adj: { n: 'Adjunto deslocado', t: 'Depois de adjunto adverbial (ou oração adverbial) deslocado para o início da frase vai vírgula.' },
+    abr: { n: 'Expressão intercalada', t: 'Abre uma expressão intercalada (explicação, aposto, “segundo…”). Ela vem entre duas vírgulas.' },
+    fch: { n: 'Expressão intercalada', t: 'Fecha a expressão intercalada. Ela precisa de vírgula antes e depois.' },
+    adv: { n: 'Mas, porém, contudo', t: 'Antes de mas, porém e contudo vai vírgula.' },
+    poi: { n: 'Pois e por isso', t: 'Antes de pois (explicação) e de por isso (conclusão) vai vírgula.' },
+    enu: { n: 'Enumeração', t: 'Os itens de uma enumeração se separam por vírgula. Antes do e final, não.' },
+    e:   { n: 'E com sujeitos diferentes', t: 'Vírgula antes de e quando as orações têm sujeitos diferentes.' },
+    ext: { n: 'Vírgula a mais', t: 'Não se separa sujeito de verbo, nem verbo de complemento.' }
+  };
+  /* [dificuldade, frase com as vírgulas certas, regra de cada vírgula na ordem] */
+  var BANK = [
+    [1, 'Ademais, a inteligência artificial facilita o acesso à informação.', 'con'],
+    [1, 'Portanto, o Ministério da Educação deve investir em formação digital.', 'con'],
+    [1, 'Nesse sentido, as escolas precisam ensinar o uso crítico da tecnologia.', 'con'],
+    [1, 'Por fim, a sociedade deve cobrar medidas contra as fake news.', 'con'],
+    [1, 'Além disso, as redes sociais afetam a saúde mental dos jovens.', 'con'],
+    [1, 'Dessa forma, o pensamento crítico se fortalece dentro da escola.', 'con'],
+    [1, 'Em suma, a educação técnica abre portas para o mercado de trabalho.', 'con'],
+    [1, 'Em primeiro lugar, a escola precisa ensinar a checar fontes.', 'con'],
+    [1, 'Com o advento da internet, a circulação de notícias falsas aumentou.', 'adj'],
+    [1, 'Nos últimos anos, o uso de telas cresceu entre os adolescentes.', 'adj'],
+    [1, 'No Brasil, a desigualdade digital ainda limita o acesso ao ensino.', 'adj'],
+    [1, 'Atualmente, muitos estudantes usam a IA para fazer as tarefas.', 'adj'],
+    [1, 'Nas escolas públicas, faltam computadores e professores preparados.', 'adj'],
+    [1, 'A inteligência artificial transformou a rotina dos estudantes.', ''],
+    [1, 'Os jovens passam horas diante das telas todos os dias.', ''],
+    [1, 'A educação técnica prepara o aluno para o mercado de trabalho.', ''],
+    [1, 'O senso crítico protege as pessoas contra a desinformação.', ''],
+    [2, 'Em contrapartida, o excesso de telas reduz a concentração.', 'con'],
+    [2, 'Por exemplo, muitos alunos copiam respostas sem ler.', 'con'],
+    [2, 'Entretanto, poucas escolas ensinam a verificar notícias.', 'con'],
+    [2, 'Infelizmente, muitos jovens acreditam em tudo o que veem nas redes.', 'con'],
+    [2, 'Nesse contexto, a família também tem papel fundamental.', 'con'],
+    [2, 'Segundo a UNESCO, muitos países ainda não regulam a IA nas escolas.', 'adj'],
+    [2, 'Em 2023, o uso de IA entre estudantes cresceu rapidamente.', 'adj'],
+    [2, 'Em virtude disso, o ensino técnico ganha importância.', 'adj'],
+    [2, 'Para combater as fake news, o Ministério da Educação deve criar oficinas de checagem.', 'adj'],
+    [2, 'Ao final do dia, muitos estudantes estão exaustos e sem foco.', 'adj'],
+    [2, 'A escola, segundo especialistas, deve ensinar a checar fontes.', 'abr fch'],
+    [2, 'A desigualdade digital, infelizmente, persiste em várias regiões.', 'abr fch'],
+    [2, 'A internet, hoje, faz parte da vida dos jovens.', 'abr fch'],
+    [2, 'O aluno estudou muito, mas não passou na prova.', 'adv'],
+    [2, 'A tecnologia ajuda, porém exige uso consciente.', 'adv'],
+    [2, 'Muitos estudantes confiam na IA, contudo poucos conferem as respostas.', 'adv'],
+    [2, 'A IA responde rápido, mas nem sempre acerta.', 'adv'],
+    [2, 'As redes sociais aproximam pessoas, mas também aumentam a ansiedade.', 'adv'],
+    [2, 'O tempo de prova é curto, porém o aluno pode se organizar.', 'adv'],
+    [2, 'Os jovens dormem pouco, pois ficam conectados até tarde.', 'poi'],
+    [2, 'A leitura é importante, pois amplia o repertório do estudante.', 'poi'],
+    [2, 'O vício em telas reduz a capacidade de concentração dos estudantes.', ''],
+    [2, 'Os professores que usam tecnologia com critério obtêm melhores resultados.', ''],
+    [2, 'A população precisa aprender a identificar notícias falsas na internet.', ''],
+    [2, 'Muitos jovens trocam o estudo pelas redes sociais.', ''],
+    [2, 'Muitos alunos leem pouco e escrevem mal.', ''],
+    [3, 'Ademais, segundo a revista The Economist, os testes de leitura caíram.', 'con fch'],
+    [3, 'Com o advento da IA, os testes de leitura caíram, pois os alunos leem menos.', 'adj poi'],
+    [3, 'Nesse sentido, o Ministério da Educação, em parceria com as escolas, deve criar oficinas de checagem.', 'con abr fch'],
+    [3, 'Por outro lado, a tecnologia amplia oportunidades, mas exige responsabilidade.', 'con adv'],
+    [3, 'O filme Matrix, lançado em 1999, questiona a realidade criada por máquinas.', 'abr fch'],
+    [3, 'Ademais, o sujeito que terceiriza o pensamento perde o senso crítico.', 'con'],
+    [3, 'Hoje, muitos jovens preferem perguntar à IA a pesquisar em fontes confiáveis.', 'adj'],
+    [3, 'No livro 1984, George Orwell já alertava para o controle da informação.', 'adj'],
+    [3, 'A rede social, que prometia aproximar pessoas, aumentou o isolamento.', 'abr fch'],
+    [3, 'Os alunos, cansados e distraídos, não conseguiram acompanhar a aula.', 'abr fch'],
+    [3, 'Se o aluno confia só na IA, ele deixa de desenvolver o raciocínio.', 'adj'],
+    [3, 'Quando o aluno terceiriza o pensamento, o senso crítico enfraquece.', 'adj'],
+    [3, 'Embora a IA ajude nas tarefas, ela não substitui o raciocínio humano.', 'adj'],
+    [3, 'O ensino técnico, que forma profissionais rapidamente, atende à demanda do mercado.', 'abr fch'],
+    [3, 'A leitura, além de ampliar o vocabulário, fortalece o pensamento crítico.', 'abr fch'],
+    [3, 'A inteligência artificial, por exemplo, escreve textos em segundos.', 'abr fch'],
+    [3, 'Muitos jovens usam o celular em sala, por isso perdem o foco.', 'poi'],
+    [3, 'Os pais, os professores e os alunos devem discutir o uso das telas.', 'enu'],
+    [3, 'Muitos jovens sentem ansiedade, tristeza e solidão por causa das redes sociais.', 'enu'],
+    [3, 'O professor, o aluno e a família precisam trabalhar juntos.', 'enu'],
+    [3, 'Quem confia cegamente na IA deixa de exercitar o próprio raciocínio.', ''],
+    [3, 'É fundamental que os jovens aprendam a conferir as informações antes de compartilhá-las.', ''],
+    [3, 'Os estudantes que dependem da IA para tudo perdem a autonomia intelectual.', ''],
+    [3, 'O jovem que compara a própria vida com as redes sociais sofre mais ansiedade.', ''],
+    [4, 'A escola deve ensinar leitura, escrita e pensamento crítico.', 'enu'],
+    [4, 'O Brasil precisa de internet, computadores e professores preparados nas escolas públicas.', 'enu'],
+    [4, 'As notícias falsas se espalham rapidamente, confundem a população e ameaçam a democracia.', 'enu'],
+    [4, 'Machado de Assis, escritor brasileiro, retratou a sociedade do século XIX.', 'abr fch'],
+    [4, 'O Hobbit, de J. R. R. Tolkien, mostra um herói que enfrenta o desconhecido.', 'abr fch'],
+    [4, 'Contudo, a tecnologia, quando mal utilizada, enfraquece o senso crítico dos jovens.', 'con abr fch'],
+    [4, 'Durante a pandemia, o ensino remoto expôs a desigualdade digital, e muitos alunos ficaram sem aula.', 'adj e'],
+    [4, 'Portanto, o Ministério da Educação, por meio de programas de inclusão digital, deve ampliar o acesso à internet, pois a conectividade garante oportunidades.', 'con abr fch poi'],
+    [4, 'Nos dias atuais, a revista The Economist, referência em análises globais, mostra que a leitura diminuiu.', 'adj abr fch'],
+    [4, 'Em Her, filme dirigido por Spike Jonze, um homem se apaixona por um sistema operacional.', 'abr fch'],
+    [4, 'Quando o jovem terceiriza o pensamento, perde a capacidade de questionar, e a sociedade fica vulnerável à manipulação.', 'adj e'],
+    [4, 'Os algoritmos, que escolhem o conteúdo de cada usuário, criam bolhas de opinião e reforçam preconceitos.', 'abr fch'],
+    [4, 'A educação técnica, por sua vez, forma profissionais, gera renda e reduz o desemprego.', 'abr fch enu'],
+    [4, 'Em 2022, segundo o IBGE, milhões de brasileiros ainda não tinham acesso à internet.', 'adj fch'],
+    [4, 'Mesmo com a tecnologia disponível, muitos alunos não sabem pesquisar, mas sabem copiar.', 'adj adv'],
+    [4, 'A tecnologia, portanto, não é vilã, mas exige uso consciente.', 'abr fch adv'],
+    [4, 'A capacidade de interpretar textos complexos depende da prática diária de leitura.', ''],
+    [4, 'A desigualdade no acesso à tecnologia agrava as diferenças educacionais no país.', '']
+  ];
+
+  /* ---------- escrita: [dificuldade, enunciado, certa, [erradas], por quê] ---------- */
+  var SPELL = [
+    [1, '“____ o Ministério da Educação deve investir em formação digital.”', 'Portanto,', ['Por tanto,', 'Portanto', 'Portando,'], 'Portanto se escreve junto e leva vírgula depois, porque é conectivo no início da frase.'],
+    [1, '“____ as redes sociais afetam a saúde mental dos jovens.”', 'Além disso,', ['Alem disso,', 'Além disso', 'Além-disso,'], 'Além leva acento, “além disso” se escreve separado e a vírgula vem depois.'],
+    [1, '“____ a inteligência artificial facilita o acesso à informação.”', 'Ademais,', ['A demais,', 'Ademáis,', 'Ademais'], 'Ademais é uma palavra só, sem acento, e leva vírgula depois.'],
+    [1, 'Qual é o título correto do livro de Tolkien?', 'O Hobbit', ['O hobbit', 'o Hobbit', 'O HOBBIT'], 'No título, o artigo inicial e o nome próprio levam letra maiúscula: O Hobbit.'],
+    [1, 'Qual é o nome correto da revista britânica citada em redações?', 'The Economist', ['the economist', 'The economist', 'The Economiste'], 'Nome próprio estrangeiro mantém a grafia original, com iniciais maiúsculas: The Economist.'],
+    [1, 'Qual grafia está correta?', 'adolescência', ['adolecência', 'adolescencia', 'adolescênsia'], 'Adolescência vem de adolescer: tem “sc” e acento no ê.'],
+    [1, 'Qual grafia está correta?', 'intervenção', ['interveção', 'intervensão', 'intenvenção'], 'Intervenção vem de intervir e se escreve com “ç”: interven-ção.'],
+    [1, 'Qual grafia está correta?', 'consciência', ['conciência', 'consciencia', 'consciênsia'], 'Consciência tem “sc” e acento no ê.'],
+    [1, 'Qual grafia está correta?', 'exceção', ['excessão', 'exeção', 'esceção'], 'Exceção se escreve com “xc” e “ç”. Não confunda com excesso.'],
+    [2, '“Os alunos estudam ____ ingressar no curso técnico.”', 'a fim de', ['afim de', 'à fim de', 'a fins de'], 'A fim de indica finalidade. Afim é adjetivo e significa “semelhante”.'],
+    [2, '“____ dez anos, a inteligência artificial era pouco usada.”', 'Há', ['A', 'Ha', 'À'], 'Para tempo já passado usa-se o verbo haver: “Há dez anos”.'],
+    [2, '“Os jovens leem menos ____ as telas distraem.”', 'porque', ['por que', 'porquê', 'por quê'], 'Porque, junto, introduz causa ou explicação.'],
+    [2, '“Não sabemos ____ os jovens leem menos.”', 'por que', ['porque', 'porquê', 'por quê'], '“Por que” (separado) equivale a “pelo qual motivo” em pergunta indireta.'],
+    [2, '“O ____ uso das redes prejudica a saúde mental.”', 'mau', ['mal', 'maul', 'mão'], 'Mau é o oposto de bom e acompanha substantivo: mau uso. Mal é o oposto de bem.'],
+    [2, '“A IA é útil, ____ exige cuidado.”', 'mas', ['mais', 'más', 'maz'], 'Mas equivale a “porém”. Mais indica quantidade.'],
+    [2, '“A escola é o lugar ____ se aprende a pensar.”', 'onde', ['aonde', 'donde', 'ao onde'], 'Onde indica lugar sem movimento. Aonde só aparece com verbo de movimento.'],
+    [2, '“O ____ crítico dos jovens diminuiu.”', 'senso', ['censo', 'cenço', 'sensso'], 'Senso é a capacidade de julgar (senso crítico). Censo é recenseamento.'],
+    [2, 'Qual grafia está correta?', 'privilégio', ['previlégio', 'privilegio', 'privilégeo'], 'Privilégio vem de “privar” + “lei”: tem “pri” no começo e acento no é.'],
+    [2, 'Qual grafia está correta?', 'obsessão', ['obsecção', 'obseção', 'obcessão'], 'Obsessão se escreve com “ss” e “ão”.'],
+    [3, '“Muitos jovens leem notícias falsas ____ checar a fonte.”', 'em vez de', ['ao invés de', 'em vês de', 'ao envés de'], 'Em vez de significa “no lugar de”. Ao invés de indica oposição.'],
+    [3, '“Estude agora, ____ perderá a vaga.”', 'senão', ['se não', 'sinão', 'se nao'], 'Senão equivale a “caso contrário”.'],
+    [3, '“Eles não leem, ____ questionam o que ouvem.”', 'tampouco', ['tão pouco', 'tão-pouco', 'tanpouco'], 'Tampouco, junto, significa “também não”.'],
+    [3, '“O debate ____ da inteligência artificial é urgente.”', 'acerca', ['a cerca', 'há cerca', 'asserca'], 'Acerca de equivale a “sobre”.'],
+    [3, '“Na sala, ____ muitos alunos distraídos.”', 'havia', ['haviam', 'avia', 'aviam'], 'Haver no sentido de “existir” é impessoal e fica no singular.'],
+    [3, '“A proposta vai ____ das necessidades dos jovens.”', 'ao encontro', ['de encontro', 'ao encontra', 'a encontro'], 'Ao encontro de indica concordância. De encontro a indica choque ou oposição.'],
+    [3, '“____ dez anos que as redes sociais fazem parte da rotina.”', 'Faz', ['Fazem', 'Fás', 'Fazerão'], 'Fazer, indicando tempo decorrido, é impessoal e fica no singular.'],
+    [4, '“Os jovens recorrem ____ inteligência artificial para estudar.”', 'à', ['a', 'á', 'as'], 'Recorrer pede a preposição “a”, que se junta ao artigo “a”: crase.'],
+    [4, '“Cabe ____ escola ensinar o uso crítico da tecnologia.”', 'à', ['a', 'há', 'á'], 'Caber pede a preposição “a”, que se junta ao artigo “a”: crase.'],
+    [4, '“Muitos estudantes assistem ____ aulas pelo celular.”', 'às', ['as', 'a', 'ás'], 'Assistir, no sentido de “ver”, pede “a”: a + as = às.'],
+    [4, '“Vivemos em uma época ____ a tecnologia muda tudo rapidamente.”', 'em que', ['onde', 'aonde', 'a que'], 'Onde é só para lugar físico. Para tempo, use “em que”.']
+  ];
+
+  /* ---------- repetição: [dificuldade, texto, certa, [erradas], por quê] ---------- */
+  var REPEAT = [
+    [1, 'O jovem usa a IA para estudar. ____ confia nas respostas sem conferir.', 'Ele', ['O jovem', 'O professor', 'Isso'], 'Um pronome retoma o sujeito sem repetir a palavra.'],
+    [1, 'A escola ensina leitura. ____ também ensina escrita.', 'Ela', ['A escola', 'O aluno', 'Elas'], 'O pronome “ela” concorda com “a escola” e evita a repetição.'],
+    [1, 'Nesse cenário, a IA ajuda nas tarefas. ____, o aluno se acomoda.', 'Diante disso', ['Nesse cenário', 'Em outro cenário', 'Nesse cenário também'], 'Troque o conectivo repetido por outro de sentido próximo: diante disso, por isso, dessa forma.'],
+    [2, 'Muitos jovens têm dúvida sobre a veracidade das notícias. Essa ____ cresce com a velocidade das redes.', 'insegurança', ['dúvida', 'certeza', 'resposta'], 'Um sinônimo de sentido próximo evita a repetição. “Certeza” inverte o sentido.'],
+    [2, 'O pensamento crítico exige esforço. Sem essa ____, o jovem repete opiniões alheias.', 'capacidade', ['pensamento', 'sorte', 'dívida'], 'Palavras como “capacidade” retomam a ideia sem repetir “pensamento”.'],
+    [2, 'A tecnologia facilita a rotina, mas ____ também cria dependência.', 'ela', ['a tecnologia', 'tecnologia', 'eles'], 'O pronome “ela” retoma “a tecnologia”.'],
+    [2, 'A rede social aproxima pessoas. Contudo, ____ também isola quem a usa em excesso.', 'ela', ['a rede social', 'o isolamento', 'você'], 'Troque o termo repetido pelo pronome que o retoma.'],
+    [3, 'O governo deve investir em escolas. ____ também precisa capacitar professores.', 'O Ministério da Educação', ['O governo', 'Ele', 'A sociedade'], 'Além de evitar a repetição, o agente específico vale mais na proposta de intervenção.'],
+    [3, 'Além disso, a IA acelera as tarefas. ____, ela reduz o esforço do estudante.', 'Ademais', ['Além disso', 'Entretanto', 'Pois'], 'Ademais tem o mesmo valor de adição. Entretanto indica oposição.'],
+    [3, 'As fake news enganam o público. ____ se espalham mais rápido que a verdade.', 'Elas', ['As fake news', 'Os leitores', 'Aquilo'], 'O pronome “elas” retoma “as fake news”.'],
+    [3, 'Nesse sentido, a escola é essencial. ____, a família também tem papel fundamental.', 'Da mesma forma', ['Nesse sentido', 'Por outro lado', 'Pois'], 'Da mesma forma mantém a adição. Por outro lado indica contraste.'],
+    [4, 'Quem cita uma obra sem explicá-la enfraquece o texto. Essa ____ deixa a argumentação vazia.', 'falha', ['obra', 'explicação', 'argumentação'], 'Resumir a ideia anterior em uma palavra nova (falha) evita repetir termos.'],
+    [4, 'A concentração dos jovens diminui com o excesso de telas. ____, a leitura também perde espaço.', 'Com o foco reduzido', ['Com a concentração em queda', 'Com a concentração alta', 'Com a leitura reduzida'], 'Um sinônimo (foco) retoma a ideia. “Concentração alta” inverte o sentido.'],
+    [4, 'A escola deve ensinar a pensar. ____ significa estimular a dúvida e a pesquisa.', 'Isso', ['Ensinar a pensar', 'Aprender a copiar', 'Pensar'], 'O pronome demonstrativo “isso” retoma a frase inteira.']
+  ];
+
+  /* ---------- proposta de intervenção: 6 temas, 5 elementos ---------- */
+  var SLOTS = {
+    ag: { label: 'Agente', cat: 'Proposta: agente genérico', tip: 'O agente deve ser específico, como o Ministério da Educação em parceria com as escolas. “O governo”, “a sociedade” e “todos nós” são genéricos.' },
+    ac: { label: 'Ação', cat: 'Proposta: ação', tip: 'A ação diz o que será feito, de forma concreta. “Resolver o problema” e “dar um jeito” não dizem nada.' },
+    me: { label: 'Meio', cat: 'Proposta: meio', tip: 'O meio responde “como?”. Use “por meio de” + algo concreto. “De alguma forma” não é um meio.' },
+    fi: { label: 'Finalidade', cat: 'Proposta: finalidade', tip: 'A finalidade responde “para quê?” com um objetivo ligado ao tema. “Melhorar tudo” é vago demais.' },
+    de: { label: 'Detalhamento', cat: 'Proposta: detalhamento', tip: 'Detalhar é acrescentar um dado concreto (quando, quem, quanto) sobre agente, ação ou meio. “Assim tudo melhora” não detalha.' }
+  };
+  var PROP = [
+    { tema: 'Impactos da inteligência artificial na educação',
+      ag: ['O Ministério da Educação, em parceria com as escolas,', ['O governo,', 'A sociedade,', 'Todos os cidadãos,']],
+      ac: ['deve incluir aulas sobre o uso crítico e responsável da inteligência artificial', ['deve resolver o problema da tecnologia', 'precisa dar um jeito nessa situação', 'deve tomar medidas urgentes']],
+      me: ['por meio de oficinas quinzenais conduzidas por professores capacitados', ['de alguma forma', 'com o esforço de todos', 'por meio de medidas necessárias']],
+      fi: ['a fim de formar jovens capazes de questionar e conferir as respostas das máquinas', ['para melhorar tudo no país', 'para que o problema acabe', 'a fim de que o Brasil seja melhor']],
+      de: ['As oficinas usarão exemplos reais de erros da IA e serão avaliadas a cada semestre.', ['Dessa forma, o problema será resolvido.', 'Isso é muito importante para todos.', 'Assim, a sociedade viverá melhor.']] },
+    { tema: 'Combate às fake news no Brasil',
+      ag: ['O Ministério da Educação, em parceria com agências de checagem,', ['O Estado,', 'As pessoas,', 'As autoridades,']],
+      ac: ['deve ensinar a verificação de fontes e de imagens nas escolas', ['deve combater as notícias falsas', 'precisa agir com firmeza contra o problema', 'deve cuidar dessa questão']],
+      me: ['por meio de aulas práticas de análise de notícias e de campanhas educativas nas redes sociais', ['por meio de ações importantes', 'com a união de todos', 'de maneira eficaz']],
+      fi: ['a fim de reduzir o compartilhamento de boatos e fortalecer a democracia', ['para que as fake news desapareçam', 'para melhorar a situação', 'a fim de resolver tudo']],
+      de: ['As aulas usarão casos reais de desinformação e terão a participação de jornalistas convidados.', ['Dessa maneira, todos terão informação.', 'Isso será bom para a sociedade.', 'Assim, o país será mais justo.']] },
+    { tema: 'Saúde mental dos jovens na era das redes sociais',
+      ag: ['O Ministério da Saúde, em parceria com as escolas públicas,', ['O governo,', 'A família e a sociedade,', 'Todos nós,']],
+      ac: ['deve ampliar o atendimento psicológico gratuito para estudantes', ['deve cuidar melhor dos jovens', 'precisa dar atenção ao problema', 'deve fazer algo urgente']],
+      me: ['por meio da contratação de psicólogos para as unidades de ensino e de rodas de conversa', ['por meio de ações diversas', 'com mais cuidado', 'de alguma maneira']],
+      fi: ['a fim de reduzir a ansiedade e o isolamento causados pelo uso excessivo das redes', ['para que os jovens fiquem felizes', 'para acabar com a tristeza', 'a fim de melhorar a vida de todos']],
+      de: ['O atendimento ocorrerá no turno escolar, com sigilo garantido e acompanhamento das famílias.', ['Dessa forma, a saúde mental será resolvida.', 'Isso é essencial para a juventude.', 'Assim, a sociedade será mais saudável.']] },
+    { tema: 'Desigualdade no acesso à tecnologia no Brasil',
+      ag: ['O Ministério das Comunicações, em parceria com as prefeituras,', ['O governo,', 'A população,', 'As empresas em geral,']],
+      ac: ['deve ampliar o acesso à internet em escolas e bairros periféricos', ['deve resolver a desigualdade digital', 'precisa agir para incluir todos', 'deve fazer algo pela tecnologia']],
+      me: ['por meio da instalação de redes de fibra óptica e da distribuição de computadores', ['por meio de iniciativas variadas', 'de forma justa', 'com investimentos necessários']],
+      fi: ['a fim de garantir que todos os estudantes tenham as mesmas oportunidades de aprendizado', ['para que o Brasil seja igual', 'para acabar com a desigualdade', 'a fim de melhorar o país']],
+      de: ['A prioridade será dada às cidades do interior com menor índice de conectividade.', ['Dessa maneira, a desigualdade acabará.', 'Isso é fundamental para o futuro.', 'Assim, ninguém ficará para trás.']] },
+    { tema: 'Vício em telas e redução da concentração',
+      ag: ['O Ministério da Educação, em parceria com as famílias,', ['O governo,', 'Os jovens,', 'A sociedade,']],
+      ac: ['deve implementar momentos de desconexão nas escolas', ['deve controlar o uso de telas', 'precisa tomar providências', 'deve resolver o vício']],
+      me: ['por meio de intervalos sem celular e de palestras sobre o uso saudável da tecnologia', ['por meio de regras necessárias', 'com disciplina', 'de alguma forma']],
+      fi: ['a fim de recuperar a concentração e o hábito da leitura entre os jovens', ['para que os jovens sejam melhores', 'para acabar com o vício', 'a fim de melhorar a educação']],
+      de: ['As palestras serão conduzidas por psicólogos e terão linguagem acessível aos adolescentes.', ['Dessa forma, o vício acabará.', 'Isso é importante para todos.', 'Assim, a concentração voltará sozinha.']] },
+    { tema: 'Valorização da educação técnica e tecnológica',
+      ag: ['O Ministério da Educação, em parceria com os institutos federais e as empresas locais,', ['O governo,', 'As empresas,', 'A sociedade,']],
+      ac: ['deve ampliar as vagas e a divulgação dos cursos técnicos', ['deve valorizar mais a educação', 'precisa investir em ensino', 'deve melhorar o setor']],
+      me: ['por meio de feiras de profissões nas escolas e de bolsas de estágio', ['por meio de incentivos', 'de várias maneiras', 'com apoio necessário']],
+      fi: ['a fim de aproximar os jovens do mercado de trabalho e valorizar a formação tecnológica', ['para melhorar o futuro', 'para que haja mais empregos', 'a fim de ajudar o Brasil']],
+      de: ['As feiras ocorrerão a cada semestre, com ex-alunos apresentando suas trajetórias.', ['Dessa forma, o desemprego acabará.', 'Isso é essencial para o país.', 'Assim, todos terão sucesso.']] }
+  ];
+
+  /* ---------- repertório em 3 frases ---------- */
+  var REPERT = [
+    { tese: 'a terceirização do pensamento e a perda do senso crítico',
+      a: 'O filme Matrix, lançado em 1999, apresenta humanos que vivem conectados a uma simulação criada por máquinas.',
+      b: 'Na trama, as pessoas aceitam uma realidade falsa sem perceber que seus pensamentos são controlados.',
+      c: 'Da mesma forma, quem terceiriza o pensamento à inteligência artificial corre o risco de aceitar respostas prontas sem questionar.',
+      bad: ['Portanto, o filme é muito bom e vale a pena assistir.', 'Por isso, as máquinas são sempre perigosas para a humanidade.'] },
+    { tese: 'o combate às fake news',
+      a: 'No livro 1984, publicado por George Orwell em 1949, o Estado controla a informação e reescreve os fatos.',
+      b: 'Na obra, os cidadãos perdem a capacidade de duvidar, pois aceitam apenas a versão oficial da verdade.',
+      c: 'Assim como na ficção, as notícias falsas atuais manipulam a opinião pública e enfraquecem o senso crítico da população.',
+      bad: ['Portanto, o livro de Orwell é uma leitura obrigatória para todos.', 'Assim, a literatura é muito importante.'] },
+    { tese: 'o vício em telas e a redução da concentração',
+      a: 'A animação Wall-E, lançada em 2008, mostra humanos que vivem em uma nave, dependentes de máquinas para todas as tarefas.',
+      b: 'No filme, as pessoas se tornam sedentárias e deixam de decidir por conta própria, pois a tecnologia resolve tudo por elas.',
+      c: 'Do mesmo modo, o uso excessivo de telas e da IA pode reduzir a autonomia e a concentração dos jovens.',
+      bad: ['Portanto, a animação é um grande clássico do cinema.', 'Por isso, as crianças devem assistir mais filmes.'] },
+    { tese: 'a desigualdade no acesso à tecnologia',
+      a: 'A pesquisa TIC Domicílios, do Comitê Gestor da Internet no Brasil, revela diferenças no acesso à internet entre classes sociais e regiões do país.',
+      b: 'Os dados mostram que famílias de menor renda dependem mais do celular e têm menos acesso a computadores, o que dificulta os estudos.',
+      c: 'Dessa forma, a desigualdade digital amplia as diferenças educacionais e limita as oportunidades dos jovens mais pobres.',
+      bad: ['Portanto, a pesquisa é muito importante para o país.', 'Assim, os números são sempre confiáveis.'] },
+    { tese: 'a saúde mental dos jovens na era das redes sociais',
+      a: 'O filme Her, dirigido por Spike Jonze e lançado em 2013, retrata um homem que se apaixona por um sistema operacional.',
+      b: 'Na história, o personagem substitui as relações humanas pela conversa com a máquina e se isola cada vez mais.',
+      c: 'De modo semelhante, o uso excessivo das redes sociais afasta os jovens do convívio real e agrava problemas como a ansiedade.',
+      bad: ['Portanto, o filme mostra que o amor é complicado.', 'Por isso, a tecnologia é a culpada de tudo.'] },
+    { tese: 'a valorização da educação técnica e tecnológica',
+      a: 'No livro O Hobbit, de J. R. R. Tolkien, o protagonista Bilbo deixa o conforto de casa para enfrentar uma jornada cheia de desafios.',
+      b: 'Ao longo da viagem, Bilbo desenvolve habilidades práticas, como a astúcia e a coragem, que só a experiência poderia ensinar.',
+      c: 'Do mesmo modo, a educação técnica forma o jovem pela prática e o prepara para os desafios reais do mercado de trabalho.',
+      bad: ['Portanto, o livro é uma ótima aventura para ler nas férias.', 'Assim, a fantasia é o melhor gênero literário.'] },
+    { tese: 'a influência da IA sobre o senso crítico',
+      a: 'Na Alegoria da Caverna, presente em A República, de Platão, prisioneiros acorrentados só enxergam sombras projetadas na parede.',
+      b: 'Eles acreditam que as sombras são a realidade até que um deles se liberta e descobre o mundo exterior.',
+      c: 'Analogamente, quem aceita tudo o que a IA responde pode ficar preso a uma visão limitada, sem buscar a verdade por conta própria.',
+      bad: ['Portanto, Platão foi um filósofo muito importante.', 'Assim, a filosofia é difícil de entender.'] }
+  ];
+  var DECOYS = [
+    'Esse é um tema muito interessante e importante para todos.',
+    'Muitas pessoas gostam dessa obra e a recomendam.',
+    'Atualmente, o mundo está cada vez mais moderno.',
+    'Cada um tem uma opinião diferente sobre esse assunto.'
+  ];
+  var REP_STEPS = ['Apresenta a obra ou o dado', 'Explica o que acontece nela', 'Conecta com a tese'];
+
+  /* ---------- estrutura em 4 parágrafos ---------- */
+  var ROLES = {
+    ctx: 'Contexto', tese: 'Tese', top: 'Tópico frasal', exp: 'Explicação do argumento', rep: 'Repertório', lig: 'Ligação com a tese',
+    ret: 'Retomada da tese', prop: 'Agente e ação', fin: 'Meio e finalidade', det: 'Detalhamento'
+  };
+  var PARTS = { intro: 'Introdução', dev: 'Desenvolvimento', conc: 'Conclusão' };
+  var BLOCKS = [
+    { intro: [['ctx', 'Com o avanço da inteligência artificial, tarefas que exigiam reflexão passaram a ser resolvidas em poucos segundos.'],
+              ['ctx', 'Nas escolas e nas universidades, é cada vez mais comum entregar à máquina a escrita de textos e a resolução de problemas.'],
+              ['tese', 'Diante disso, o uso acrítico da tecnologia ameaça o senso crítico dos jovens, pois eles passam a terceirizar o próprio pensamento.']],
+      dev: [['top', 'Em primeiro lugar, a facilidade das respostas prontas reduz o esforço intelectual dos estudantes.'],
+            ['exp', 'Quando o aluno recorre à IA antes de tentar pensar, ele deixa de exercitar a análise, a interpretação e a argumentação.'],
+            ['rep', 'O filme Wall-E, lançado em 2008, mostra humanos dependentes de máquinas que deixam de decidir por conta própria.'],
+            ['lig', 'Da mesma forma, quem entrega à IA todas as decisões intelectuais abre mão da autonomia e enfraquece o próprio pensamento crítico.']],
+      conc: [['ret', 'Portanto, a terceirização do pensamento é um problema que compromete a formação crítica dos jovens.'],
+             ['prop', 'Logo, o Ministério da Educação, em parceria com as escolas, deve incluir aulas de uso crítico da IA no currículo.'],
+             ['fin', 'Essa ação deve ocorrer por meio de oficinas quinzenais, a fim de formar estudantes capazes de questionar as respostas das máquinas.'],
+             ['det', 'As oficinas serão conduzidas por professores capacitados e avaliadas a cada semestre.']] },
+    { intro: [['ctx', 'Nos últimos anos, as redes sociais transformaram a maneira como os brasileiros recebem informações.'],
+              ['ctx', 'Ao mesmo tempo, notícias falsas se espalham com rapidez e alcançam milhões de pessoas antes de qualquer checagem.'],
+              ['tese', 'Dessa forma, o combate às fake news no Brasil exige educação midiática, já que a desinformação ameaça a democracia.']],
+      dev: [['top', 'Em primeiro plano, a falta de hábito de checar fontes facilita a circulação de boatos.'],
+            ['exp', 'Muitos usuários compartilham conteúdos apenas pelo título, sem verificar a origem nem a data da informação.'],
+            ['rep', 'No livro 1984, publicado por George Orwell em 1949, o Estado reescreve os fatos para controlar o que a população acredita.'],
+            ['lig', 'Assim como na ficção, as fake news atuais manipulam a opinião pública e enfraquecem a capacidade de o cidadão discernir a verdade.']],
+      conc: [['ret', 'Em suma, as notícias falsas ameaçam a democracia e exigem uma resposta coordenada.'],
+             ['prop', 'Portanto, o Ministério da Educação, em parceria com agências de checagem, deve ensinar a verificação de fontes nas escolas.'],
+             ['fin', 'Isso deve ocorrer por meio de aulas práticas de análise de notícias, a fim de reduzir o compartilhamento de boatos.'],
+             ['det', 'As aulas usarão casos reais de desinformação e terão a participação de jornalistas convidados.']] },
+    { intro: [['ctx', 'As redes sociais passaram a ocupar boa parte do dia a dia dos jovens brasileiros.'],
+              ['ctx', 'Embora aproximem pessoas, elas expõem os adolescentes a comparações constantes e à cobrança por perfeição.'],
+              ['tese', 'Nesse sentido, o uso excessivo das redes prejudica a saúde mental dos jovens, pois aumenta a ansiedade e o isolamento.']],
+      dev: [['top', 'Primeiramente, a comparação constante com vidas idealizadas alimenta a insegurança entre os adolescentes.'],
+            ['exp', 'Ao verem apenas os melhores momentos dos outros, muitos jovens passam a sentir que a própria vida é insuficiente.'],
+            ['rep', 'No filme Her, dirigido por Spike Jonze, um homem se isola cada vez mais ao substituir as relações humanas por uma conexão virtual.'],
+            ['lig', 'De modo semelhante, os jovens que vivem conectados trocam o convívio real por interações superficiais, o que agrava a ansiedade.']],
+      conc: [['ret', 'Em síntese, o uso desequilibrado das redes sociais afeta a saúde mental da juventude.'],
+             ['prop', 'Dessa maneira, o Ministério da Saúde, em parceria com as escolas públicas, deve ampliar o atendimento psicológico gratuito.'],
+             ['fin', 'Essa medida ocorrerá por meio da contratação de psicólogos para as unidades de ensino, a fim de reduzir a ansiedade e o isolamento.'],
+             ['det', 'O atendimento ocorrerá no turno escolar, com sigilo garantido e acompanhamento das famílias.']] }
+  ];
+  var THEMES = [
+    'Impactos da inteligência artificial na educação',
+    'Combate às fake news no Brasil',
+    'Saúde mental dos jovens na era das redes sociais',
+    'Desigualdade no acesso à tecnologia no Brasil',
+    'Vício em telas e redução da concentração',
+    'Valorização da educação técnica e tecnológica'
+  ];
+  var CATS = {
+    'Escrita e ortografia': 'Revise conectivos e nomes: Portanto, Além disso, Ademais, O Hobbit, The Economist. Atenção a por que/porque, mau/mal e crase.',
+    'Repetição de palavras': 'Troque a palavra repetida por pronome, sinônimo ou outro conectivo. Nenhuma palavra mais de duas vezes por parágrafo.',
+    'Repertório': 'Repertório em 3 frases: apresenta a obra ou o dado, explica o que acontece nela, conecta com a tese.',
+    'Estrutura dos parágrafos': 'Quatro parágrafos: introdução (contexto + tese), D1, D2 e conclusão (retoma a tese + proposta completa). Não misture a introdução com o primeiro argumento.'
+  };
+  Object.keys(SLOTS).forEach(function (k) { CATS[SLOTS[k].cat] = SLOTS[k].tip; });
+
+  /* ---------- reinos, itens, capas ---------- */
+  var REALMS = [
+    { id: 'virgula', name: 'Floresta das Vírgulas', desc: 'Pontue frases sem vírgula: conectivo, adjunto deslocado, intercalada, mas/porém/pois.', kinds: ['comma'],
+      bg: { s0: '#141a45', s1: '#34397a', hill: '#242b5f', gnd: '#2a2240', edge: '#3b3160', deco: 'hills' },
+      enemies: [['Slime do Spam', 0], ['Bot de Fake News', 1], ['Morcego do Scroll', 2], ['Fantasma da Distração', 3], ['Troll do Comentário', 4]], boss: ['Rei Algoritmo', 5] },
+    { id: 'escrita', name: 'Vila das Palavras', desc: 'Grafia de conectivos e obras, ortografia e palavras repetidas.', kinds: ['spell', 'repeat'],
+      bg: { s0: '#2b1a45', s1: '#7a4a6a', hill: '#3d2757', gnd: '#3a2a3a', edge: '#5a4060', deco: 'hills' },
+      enemies: [['Gárgula do Erro', 'gargula'], ['Corvo da Repetição', 'corvo']], boss: ['Escriba Sombrio', 'escriba'] },
+    { id: 'proposta', name: 'Fortaleza da Proposta', desc: 'Monte a proposta de intervenção: agente, ação, meio, finalidade e detalhamento.', kinds: ['slots'],
+      bg: { s0: '#16243a', s1: '#3a5a7a', hill: '#25384f', gnd: '#262f3d', edge: '#3c4b60', deco: 'pillars' },
+      enemies: [['Burocrata do Nada', 'buro'], ['Fiscal do Genérico', 'buro2']], boss: ['Hidra do “O Governo”', 'hidra'] },
+    { id: 'repertorio', name: 'Biblioteca dos Repertórios', desc: 'Apresente, explique e conecte: repertório em 3 frases.', kinds: ['rorder', 'rconnect', 'rclass'],
+      bg: { s0: '#2a1a14', s1: '#6a4a30', hill: '#3d2a1e', gnd: '#33261c', edge: '#5a4430', deco: 'shelves' },
+      enemies: [['Livro Assombrado', 'livro'], ['Espectro do Spoiler', 'espectro']], boss: ['Bibliotecário Caído', 'biblio'] },
+    { id: 'estrutura', name: 'Torre dos Parágrafos', desc: 'Quatro parágrafos bem separados: introdução, D1, D2 e conclusão.', kinds: ['porder', 'pclass', 'psplit'],
+      bg: { s0: '#0f2a2e', s1: '#2f6a6a', hill: '#1c4448', gnd: '#1f3236', edge: '#34585c', deco: 'tower' },
+      enemies: [['Golem de Blocos', 'golem'], ['Bloco de Texto Corrido', 'blob']], boss: ['Titã do Texto Corrido', 'tita'] },
+    { id: 'torre', name: 'Castelo da Redação', desc: 'Prova final: todos os exercícios misturados. Quanto mais você erra um tipo, mais ele aparece.', kinds: ['*'],
+      bg: { s0: '#2a0f1a', s1: '#7a2a3a', hill: '#4a1a28', gnd: '#2e1620', edge: '#5a2a3a', deco: 'castle' },
+      enemies: [['Escrivão Fantasma', 'espectro2'], ['Gárgula Sombria', 'gargula2'], ['Golem de Introdução', 'golem2']], boss: ['Corretor Supremo', 'corretor'] }
+  ];
+  var ITEMS = [
+    { k: 'sword', n: 'Espada da Pontuação', max: 10, base: 30, fx: function (l) { return 'Dano base ' + (14 + 6 * l); } },
+    { k: 'armor', n: 'Armadura de Revisão', max: 10, base: 35, fx: function (l) { return 'Vida máxima ' + (100 + 25 * l); } },
+    { k: 'helm', n: 'Elmo da Concentração', max: 8, base: 35, fx: function (l) { return 'Reduz em ' + (2 * l) + ' o dano de cada golpe recebido'; } },
+    { k: 'clock', n: 'Ampulheta', max: 8, base: 40, fx: function (l) { return '+' + (1.5 * l).toFixed(1).replace('.', ',') + 's por pergunta'; } },
+    { k: 'luck', n: 'Bolsa de Ouro', max: 8, base: 50, fx: function (l) { return '+' + (15 * l) + '% de moedas'; } }
+  ];
+  var SKIN_NAMES = {
+    armor: ['Camponês', 'Aprendiz', 'Escudeiro', 'Cavaleiro', 'Paladino', 'Mestre da Escrita'],
+    sword: ['Vara de madeira', 'Espada de ferro', 'Aço polido', 'Lâmina de gelo', 'Lâmina dourada', 'Espada de fogo rosa'],
+    helm: ['Sem elmo', 'Capuz de couro', 'Elmo de ferro', 'Elmo com pluma', 'Elmo alado'],
+    clock: ['Sem ampulheta', 'Ampulheta de madeira', 'Ampulheta de prata', 'Ampulheta dourada'],
+    luck: ['Sem bolsa', 'Bolsinha', 'Bolsa cheia', 'Saco de ouro']
+  };
+  var CAPES = [
+    { n: 'Vermelha', c: '#b3261e', need: -1 },
+    { n: 'Verde-floresta', c: '#2f8f63', need: 0 },
+    { n: 'Azul-noite', c: '#2f5fb3', need: 1 },
+    { n: 'Roxa', c: '#7a4fc9', need: 2 },
+    { n: 'Dourada', c: '#e0b43a', need: 3 },
+    { n: 'Ciano-gelo', c: '#7fe0ff', need: 4 },
+    { n: 'Rosa-fogo', c: '#ff7ad9', need: 5 }
+  ];
+  /* ---------- sprites de inimigo: metade esquerda 8x16, espelhada ---------- */
+  var SPR = {
+    gargula: { pal: { s: '#8e96a8', d: '#5d6478', r: '#ff4d4d', w: '#ffffff' }, rows: [
+      '..s.....', '..ss....', '.sssss..', '.ssssss.', 'dssrrsss', 'dsssssss', '.dsswsss', '..ssssss',
+      'dd.sssss', 'ddd.ssss', 'dddd.sss', 'ddd..sss', 'dd...ss.', '....ss..', '...sss..', '..ssss..'] },
+    corvo: { pal: { k: '#2a2f4a', b: '#4b5fa3', y: '#f2b84b', w: '#ffffff' }, rows: [
+      '........', '...kkkk.', '..kkkkkk', '..kwkkkk', '..kkkkyy', '...kkkky', '.kkkkkkk', 'kkkkkkkk',
+      'kbkkkkkk', 'kkbkkkkk', '.kkbkkkk', '..kkkkkk', '...kkkkk', '....y..y', '....y..y', '........'] },
+    escriba: { pal: { p: '#5b3a9a', d: '#3a2466', k: '#1c1630', y: '#ffe27a', w: '#f3e8c9', q: '#f2b84b' }, rows: [
+      '...pppp.', '..pppppp', '.ppppppp', '.ppkkkkk', '.ppkykkk', '.ppkkkkk', '.ppppppp', '..pppppp',
+      '.pppppww', 'pppppwww', 'ppppppww', 'pppqpppp', 'ppppqppp', 'pppppqpp', 'pdddddpp', 'dddddddd'] },
+    buro: { pal: { h: '#3a2c1c', f: '#f0c9a0', g: '#1c1630', m: '#a04b4b', c: '#6b7490', w: '#ffffff', t: '#ef5b5b', d: '#2a2438' }, rows: [
+      '...hhhh.', '..hhhhhh', '..ffffff', '..fgffff', '..ffffff', '..ffmmmm', '...fffff', '..ccwwww',
+      '.ccwwwwt', 'ccccwwwt', 'ccccccwt', 'cc.ccccc', 'cc.ccccc', '.c.ccccc', '..ccc..c', '..ddd..d'] },
+    hidra: { pal: { g: '#4cc38a', d: '#2f8f63', r: '#ff4d4d', y: '#ffe27a', k: '#1c1630' }, rows: [
+      '........', '.ggg.ggg', 'gggg.ggg', 'grgg.grg', 'gggg.ggg', '.gyg.ggg', '..g..ggg', '..gggggg',
+      '.ggggggg', 'ggggdggg', 'gdggggdg', 'ggggggdg', 'gdgdgggg', '.ggggggg', '..gg.ggg', '..dd.ddd'] },
+    livro: { pal: { p: '#7a4fc9', w: '#f3e8c9', l: '#a79c7b', k: '#1c1630', m: '#ef5b5b' }, rows: [
+      '........', '.ppppppp', 'pwwwwwwp', 'pwlllwwp', 'pwwwwwwp', 'pwwkwwwp', 'pwwwwwwp', 'pwlllwwp',
+      'pwwwwwwp', 'pwwwmmwp', '.pwwwwwp', '..pppppp', '...wwwww', '....www.', '...ww.w.', '....w...'] },
+    espectro: { pal: { b: '#bcd4ff', d: '#7f9fd6', k: '#1c1630', w: '#ffffff' }, rows: [
+      '...bbbb.', '..bbbbbb', '.bbbbbbb', '.bbkbbbb', '.bbkbbbb', '.bbbbkkk', '.bbbbkkk', '.bbbbbbb',
+      '.bbbbbbb', '.dbbbbbb', '.bbbbbbb', '.bbbbbbb', '.bb.bbbb', '.b..bb.b', '....b..b', '........'] },
+    biblio: { pal: { w: '#e6eaff', k: '#1c1630', r: '#ff4d4d', n: '#2b3a6b', q: '#f2b84b', d: '#1c2447' }, rows: [
+      '..wwwwww', '.wwwwwww', '.wwwwwww', '.wwkkwww', '.wwkrwww', '.wwwwwww', '..wwkwkw', '..wkwkwk',
+      '...wwwww', '.nnnnnnn', 'nnnnqnnn', 'nnnnnqnn', 'nnnnnnnn', 'nnnqnnnn', 'nnnnnnnn', 'dddddddd'] },
+    golem: { pal: { s: '#9aa0a8', d: '#6b7078', r: '#ffe27a' }, rows: [
+      '........', '..ssssss', '..srssss', '..ssssss', '..dddddd', 'ssdsssss', 'sdssdsss', 'ssssssss',
+      'sdsssdss', 'ssssssss', '..ssssss', '..sdsssd', '..ssssss', '..ssssss', '..dddd..', '..ssss..'] },
+    blob: { pal: { e: '#d9c99b', l: '#8a7b52', w: '#ffffff', k: '#1c1630', d: '#a89a6b' }, rows: [
+      '........', '........', '...eeeee', '..eeeeee', '.eeeeeee', '.eewkeee', '.eeeeeee', 'eeelllll',
+      'eeeeeeee', 'elllllll', 'eeeeeeee', 'elllllee', 'eeeeeeee', '.eeeeeee', '..dddddd', '........'] },
+    tita: { pal: { s: '#5b7cc9', d: '#3a4d8a', y: '#f2b84b', r: '#ff4d4d' }, rows: [
+      '..y.....', '..yyssss', '.sssssss', '.ssrssss', '.sssssss', '..dddddd', 'ssssssss', 'ssdsssss',
+      'ssssssyy', 'sdssssyy', 'ssssssss', '.sssssss', '..ssssss', '..sdssss', '..dddd..', '..ssss..'] },
+    corretor: { pal: { r: '#c0252d', d: '#7a1a20', k: '#1c1630', w: '#ffffff', p: '#f3e8c9', y: '#ffe27a' }, rows: [
+      '.......r', '......rr', '.....rrr', '....rrrr', '..rrrrrr', '..kkkkkk', '..kwkkkk', '..kkkkkk',
+      '...kkkkk', '.rrrrrrr', 'rrrrdrrr', 'rpprrrrr', 'rpprrdrr', 'rrrrrrrr', 'rrdrrrrr', 'dddddddd'] }
+  };
+  SPR.buro2 = { pal: { h: '#3a2c1c', f: '#f0c9a0', g: '#1c1630', m: '#a04b4b', c: '#4a8f6a', w: '#ffffff', t: '#ffe27a', d: '#2a2438' }, rows: SPR.buro.rows };
+  SPR.golem2 = { pal: { s: '#6fa3d6', d: '#47709c', r: '#ffe27a' }, rows: SPR.golem.rows };
+  SPR.espectro2 = { pal: { b: '#ffc9c9', d: '#d68f8f', k: '#1c1630', w: '#ffffff' }, rows: SPR.espectro.rows };
+  SPR.gargula2 = { pal: { s: '#c9a24a', d: '#8a6a22', r: '#ff4d4d', w: '#ffffff' }, rows: SPR.gargula.rows };
+  /* DATA END */
+
+  /* ---------- salvamento ---------- */
+  var KEY = 'cavaleiro-virgula-v2', OLD_KEY = 'cavaleiro-virgula-v1';
+  function loadSave() {
+    var d = { coins: 0, lv: { sword: 0, armor: 0, helm: 0, clock: 0, luck: 0 }, realms: {}, miss: {}, hits: 0, tries: 0, mode: 'mixed', sound: true, cape: 0, last: 0, essays: [], draft: '', theme: 0, repOk: false };
+    try {
+      var r = JSON.parse(localStorage.getItem(KEY) || 'null'), j, k;
+      if (r) {
+        for (k in r) { if (k !== 'lv' && k !== 'miss' && k !== 'realms') d[k] = r[k]; }
+        for (j in (r.lv || {})) d.lv[j] = r.lv[j];
+        d.miss = r.miss || {}; d.realms = r.realms || {};
+      } else {
+        var o = JSON.parse(localStorage.getItem(OLD_KEY) || 'null');
+        if (o) {
+          d.coins = o.coins || 0; d.hits = o.hits || 0; d.tries = o.tries || 0; d.mode = o.mode || 'mixed';
+          d.sound = o.sound !== false; d.miss = o.miss || {};
+          for (j in (o.lv || {})) d.lv[j] = o.lv[j];
+          d.realms.virgula = { best: o.best || 0, bestScore: o.bestScore || 0 };
+        }
+      }
+    } catch (e) { /* sem armazenamento: o jogo funciona sem salvar */ }
+    return d;
+  }
+  var save = loadSave();
+  function persist() { try { localStorage.setItem(KEY, JSON.stringify(save)); } catch (e) { /* ignora */ } }
+  function maxHp() { return 100 + 25 * save.lv.armor; }
+  function realmBest(i) { return (save.realms[REALMS[i].id] || {}).best || 0; }
+  function unlocked(i) { return i === 0 || realmBest(i - 1) >= 5; }
+  function starsOf(b) { return b >= 15 ? 3 : b >= 10 ? 2 : b >= 5 ? 1 : 0; }
+  function capeOpen(i) { return CAPES[i].need < 0 || realmBest(CAPES[i].need) >= 5; }
+  function tiers() {
+    var l = save.lv;
+    return { a: Math.min(5, Math.floor(l.armor / 2)), s: Math.min(5, Math.floor(l.sword / 2)), h: Math.ceil(l.helm / 2), c: l.clock === 0 ? 0 : l.clock <= 2 ? 1 : l.clock <= 5 ? 2 : 3, g: l.luck === 0 ? 0 : l.luck <= 2 ? 1 : l.luck <= 5 ? 2 : 3 };
+  }
+  function skinName(k) {
+    var T = tiers(), t = { armor: T.a, sword: T.s, helm: T.h, clock: T.c, luck: T.g }[k];
+    return SKIN_NAMES[k][t];
+  }
+
+  /* ---------- som ---------- */
+  var AC = null;
+  function tone(f, d, type, vol, to, delay) {
+    if (!save.sound) return;
+    try {
+      AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+      var t = AC.currentTime + (delay || 0), o = AC.createOscillator(), g = AC.createGain();
+      o.type = type || 'square';
+      o.frequency.setValueAtTime(f, t);
+      if (to) o.frequency.exponentialRampToValueAtTime(to, t + d);
+      g.gain.setValueAtTime(vol || 0.05, t);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+      o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + d);
+    } catch (e) { /* sem áudio */ }
+  }
+  var sfx = {
+    hit: function () { tone(520, .12, 'square', .05, 900); },
+    kill: function () { tone(500, .1, 'square', .05, null, 0); tone(660, .1, 'square', .05, null, .1); tone(880, .2, 'square', .05, null, .2); },
+    miss: function () { tone(220, .3, 'sawtooth', .05, 80); },
+    buy: function () { tone(700, .08, 'square', .04, null, 0); tone(1000, .1, 'square', .04, null, .08); }
+  };
+
+  /* ---------- estado ---------- */
+  var run = null, q = null, phase = 'menu', scr = 'menu', tok = 0, t0 = 0, shopCtx = 'menu';
+  var an = { hAtk: 0, eAtk: 0, hHit: 0, eHit: 0, die: 0 }, floats = [];
+
+  function show(name) {
+    scr = name;
+    ['menu', 'battle', 'shop', 'write'].forEach(function (n) { $('sc-' + n).hidden = n !== name; });
+    $('bars').hidden = name !== 'battle';
+    updHud();
+  }
+  function updHud() {
+    $('rn').textContent = run ? run.realm.name : '–';
+    $('st').textContent = run ? run.stage : 1;
+    $('co').textContent = save.coins;
+    $('sc').textContent = run ? run.score : 0;
+    $('cb').textContent = run ? run.combo : 0;
+    $('snd').textContent = 'Som: ' + (save.sound ? 'ligado' : 'desligado');
+  }
+  function updBars() {
+    if (!run) return;
+    var mh = maxHp();
+    $('hfill').style.width = Math.max(0, run.hp / mh * 100) + '%';
+    $('htxt').textContent = Math.max(0, run.hp) + '/' + mh;
+    if (run.enemy) {
+      $('efill').style.width = Math.max(0, run.enemy.hp / run.enemy.max * 100) + '%';
+      $('etxt').textContent = Math.max(0, run.enemy.hp) + '/' + run.enemy.max;
+      $('ename').textContent = run.enemy.name;
+    }
+  }
+
+  /* ---------- sorteio de perguntas ---------- */
+  function pickIdx(key, bank, d, tf) {
+    var pool = [], exact = [], i, k;
+    for (i = 0; i < bank.length; i++) {
+      k = key + ':' + i;
+      var t = tf(bank[i]);
+      if (t <= d && run.recent.indexOf(k) < 0) { pool.push(i); if (t === d) exact.push(i); }
+    }
+    if (!pool.length) {
+      run.recent = run.recent.filter(function (r) { return r.indexOf(key + ':') !== 0; });
+      return pickIdx(key, bank, d, tf);
+    }
+    var from = (exact.length && Math.random() < 0.6) ? exact : pool;
+    var idx = from[rint(from.length)];
+    run.recent.push(key + ':' + idx); if (run.recent.length > 16) run.recent.shift();
+    return idx;
+  }
+  var tier0 = function (x) { return x[0]; }, tier1 = function () { return 1; };
+  function blank(s) { return esc(s).replace('____', '<span class="blank">______</span>'); }
+  function opt(t, ok, why) { return { t: t, ok: ok, why: why }; }
+
+  function build(parts) {
+    var words = [], commas = {}, codeAt = {}, n = 0;
+    parts.forEach(function (p) {
+      var codes = p[2] ? p[2].split(' ') : [], ci = 0;
+      p[1].split(/\s+/).forEach(function (tk) {
+        var has = tk.charAt(tk.length - 1) === ',';
+        words.push(has ? tk.slice(0, -1) : tk);
+        if (has) { commas[words.length - 1] = true; codeAt[words.length - 1] = codes[ci++]; n++; }
+      });
+    });
+    return { words: words, commas: commas, codeAt: codeAt, count: n };
+  }
+
+  var MK = {};
+  MK.comma = function (d, boss) {
+    var parts = [BANK[pickIdx('c', BANK, d, tier0)]];
+    if (boss) parts.push(BANK[pickIdx('c', BANK, d, tier0)]);
+    var b = build(parts), mode = save.mode;
+    if (mode === 'mixed') mode = run.stage === 1 && run.ri === 0 ? 'click' : (Math.random() < (boss ? 0.5 : 0.4) ? 'type' : 'click');
+    b.kind = 'comma'; b.mode = mode; b.user = {}; b.T = 22; b.slow = mode === 'type' ? 1.35 : 1; b.bossX = 1.7;
+    b.label = boss ? 'Chefe: duas frases' : (mode === 'type' ? 'Digitar' : 'Tocar');
+    b.inst = mode === 'type' ? 'Digite as vírgulas no texto. Não mude as palavras.' : 'Toque nos espaços onde vai vírgula. Toque de novo para tirar.';
+    return b;
+  };
+  MK.spell = function (d) {
+    var it = SPELL[pickIdx('s', SPELL, d, tier0)];
+    var wrong = shuffle(it[3]).slice(0, d === 1 ? 2 : 3);
+    return { kind: 'choice', cat: 'Escrita e ortografia', label: 'Escrita', inst: 'Escolha a forma correta.', ctx: blank(it[1]),
+      opts: shuffle([opt(it[2], true)].concat(wrong.map(function (w) { return opt(w, false); }))), why: it[4], T: 14 };
+  };
+  MK.repeat = function (d) {
+    var it = REPEAT[pickIdx('r', REPEAT, d, tier0)];
+    return { kind: 'choice', cat: 'Repetição de palavras', label: 'Repetição', inst: 'Qual trecho completa sem repetir e sem mudar o sentido?', ctx: blank(it[1]),
+      opts: shuffle([opt(it[2], true)].concat(it[3].map(function (w) { return opt(w, false); }))), why: it[4], T: 18 };
+  };
+  MK.slots = function (d) {
+    var th = PROP[pickIdx('p', PROP, d, tier1)], n = Math.min(5, d + 1), nopt = Math.min(4, d + 1);
+    var rest = shuffle(['ac', 'me', 'fi', 'de']).slice(0, n - 1);
+    var keys = ['ag', 'ac', 'me', 'fi', 'de'].filter(function (k) { return k === 'ag' || rest.indexOf(k) >= 0; });
+    var slots = keys.map(function (k) {
+      var bad = shuffle(th[k][1]).slice(0, nopt - 1);
+      return { key: k, opts: shuffle([opt(th[k][0], true)].concat(bad.map(function (b) { return opt(b, false); }))), sel: null };
+    });
+    return { kind: 'slots', label: 'Proposta', inst: 'Monte a proposta de intervenção: escolha a melhor opção em cada elemento.', tema: th.tema, th: th, slots: slots, full: n === 5, T: 10 + 5 * n,
+      ctx: '<b>Tema:</b> ' + esc(th.tema) };
+  };
+  function repOrder(d, boss) {
+    var r = REPERT[pickIdx('o', REPERT, d, tier1)], dec = d >= 4 ? 2 : d >= 3 ? 1 : 0;
+    var items = [{ t: r.a, pos: 0 }, { t: r.b, pos: 1 }, { t: r.c, pos: 2 }].concat(shuffle(DECOYS).slice(0, dec).map(function (t) { return { t: t, pos: -1 }; }));
+    return { kind: 'order', cat: 'Repertório', label: 'Repertório em 3 frases', labels: REP_STEPS, need: 3, items: shuffle(items), T: 8 + 6 * items.length, hasDecoy: dec > 0,
+      inst: dec ? 'Toque só nas 3 frases do repertório, na ordem: apresenta, explica, conecta. Deixe de fora a frase solta.' : 'Toque nas frases na ordem: 1) apresenta, 2) explica, 3) conecta com a tese.',
+      ctx: '<b>Tese:</b> ' + esc(r.tese) };
+  }
+  MK.rorder = repOrder;
+  MK.rconnect = function (d) {
+    var i = pickIdx('o', REPERT, d, tier1), r = REPERT[i], o = [opt(r.c, true)];
+    r.bad.slice(0, d >= 2 ? 2 : 1).forEach(function (b) { o.push(opt(b, false, 'Elogia ou resume a obra, mas não conecta com a tese.')); });
+    if (d >= 4) { var other = REPERT[(i + 1 + rint(REPERT.length - 1)) % REPERT.length]; o.push(opt(other.c, false, 'Essa frase conecta com outra tese, não com a deste exercício.')); }
+    return { kind: 'choice', cat: 'Repertório', label: 'Conectar com a tese', inst: 'Qual frase conecta o repertório com a tese?', T: 22,
+      ctx: '<p><b>Tese:</b> ' + esc(r.tese) + '</p><p>1) ' + esc(r.a) + '</p><p>2) ' + esc(r.b) + '</p>', plain: true, opts: shuffle(o),
+      why: 'A terceira frase precisa ligar a obra à tese, mostrando como uma ilumina a outra.' };
+  };
+  MK.rclass = function (d) {
+    var r = REPERT[pickIdx('o', REPERT, d, tier1)], k = rint(3), o = REP_STEPS.map(function (s, j) { return opt(s, j === k); });
+    if (d >= 3) o.push(opt('Dá uma opinião solta, sem ligação com a obra', false));
+    return { kind: 'choice', cat: 'Repertório', label: 'Passo do repertório', inst: 'Que passo do repertório esta frase cumpre?', T: 16,
+      ctx: '<p>' + esc([r.a, r.b, r.c][k]) + '</p>', plain: true, opts: shuffle(o),
+      why: 'Repertório em 3 frases: (1) apresenta a obra ou o dado, (2) explica o que acontece nela, (3) conecta com a tese.' };
+  };
+  MK.porder = function (d) {
+    var blk = BLOCKS[rint(BLOCKS.length)], pn = ['intro', 'dev', 'conc'][rint(3)], set = blk[pn];
+    var items = set.map(function (s, i) { return { t: s[1], pos: i, role: s[0] }; });
+    return { kind: 'order', cat: 'Estrutura dos parágrafos', label: PARTS[pn] + ': monte o parágrafo', need: set.length, items: shuffle(items), T: 8 + 6 * set.length, hasDecoy: false,
+      labels: set.map(function (s) { return ROLES[s[0]]; }), inst: 'Toque nas frases na ordem em que aparecem no parágrafo.',
+      ctx: pn === 'intro' ? 'Introdução: contexto → tese.' : pn === 'dev' ? 'Desenvolvimento: tópico frasal → explicação → repertório → ligação com a tese.' : 'Conclusão: retomada da tese → agente e ação → meio e finalidade → detalhamento.' };
+  };
+  MK.pclass = function (d) {
+    var blk = BLOCKS[rint(BLOCKS.length)], pn = ['intro', 'dev', 'conc'][rint(3)], s = blk[pn][rint(blk[pn].length)];
+    var same = shuffle(Object.keys(ROLES).filter(function (r) { return r !== s[0] && blk[pn].some(function (x) { return x[0] === r; }); }));
+    var others = shuffle(Object.keys(ROLES).filter(function (r) { return r !== s[0] && same.indexOf(r) < 0; }));
+    var roles = d >= 3 ? shuffle(Object.keys(ROLES).filter(function (r) { return r !== s[0]; })).slice(0, 3) : same.slice(0, 2).concat(others).slice(0, 3);
+    var o = [opt(ROLES[s[0]], true)].concat(roles.map(function (r) { return opt(ROLES[r], false); }));
+    return { kind: 'choice', cat: 'Estrutura dos parágrafos', label: 'Função da frase', T: 16, plain: true,
+      inst: d >= 3 ? 'Que função esta frase cumpre no texto?' : 'Que função esta frase cumpre? Ela está na ' + PARTS[pn].toLowerCase() + '.',
+      ctx: '<p>' + esc(s[1]) + '</p>', opts: shuffle(o),
+      why: 'Introdução = contexto + tese. Desenvolvimento = tópico frasal, explicação, repertório e ligação com a tese. Conclusão = retomada, agente e ação, meio e finalidade, detalhamento.' };
+  };
+  MK.psplit = function (d) {
+    var blk = BLOCKS[rint(BLOCKS.length)], two = Math.random() < 0.5, first = two ? blk.intro : blk.dev, second = two ? blk.dev : blk.conc;
+    var all = first.concat(second), ans = first.length, cand = [ans];
+    shuffle(all.map(function (_, i) { return i + 1; }).filter(function (k) { return k !== ans && k < all.length; })).slice(0, 3).forEach(function (k) { cand.push(k); });
+    cand.sort(function (a, b) { return a - b; });
+    var txt = all.map(function (s, i) { return '<p><b>' + (i + 1) + '.</b> ' + esc(s[1]) + '</p>'; }).join('');
+    return { kind: 'choice', cat: 'Estrutura dos parágrafos', label: 'Separar parágrafos', T: 26, plain: true,
+      inst: two ? 'A introdução e o primeiro argumento estão misturados. Onde termina a introdução?' : 'O argumento e a conclusão estão misturados. Onde termina o desenvolvimento?',
+      ctx: txt, opts: cand.map(function (k) { return opt('Depois da frase ' + k, k === ans); }),
+      why: two ? 'A introdução traz contexto e tese. O tópico frasal já inicia o desenvolvimento, em outro parágrafo.' : 'A conclusão começa quando o texto retoma a tese. O argumento termina na ligação com a tese.' };
+  };
+  var MIX = ['comma', 'spell', 'repeat', 'slots', 'rorder', 'rconnect', 'rclass', 'porder', 'pclass', 'psplit'];
+  var MIXCATS = { comma: Object.keys(RULES).map(function (k) { return RULES[k].n; }), spell: ['Escrita e ortografia'], repeat: ['Repetição de palavras'],
+    slots: Object.keys(SLOTS).map(function (k) { return SLOTS[k].cat; }), rorder: ['Repertório'], rconnect: ['Repertório'], rclass: ['Repertório'],
+    porder: ['Estrutura dos parágrafos'], pclass: ['Estrutura dos parágrafos'], psplit: ['Estrutura dos parágrafos'] };
+  function mixKind() {
+    var ws = MIX.map(function (k) { var w = 1; MIXCATS[k].forEach(function (c) { w += 0.25 * (save.miss[c] || 0); }); return Math.min(4, w); });
+    var sum = ws.reduce(function (a, b) { return a + b; }, 0), r = Math.random() * sum, i;
+    for (i = 0; i < ws.length; i++) { r -= ws[i]; if (r <= 0) return MIX[i]; }
+    return MIX[0];
+  }
+  function tierOf(st) { return run.realm.id === 'torre' ? Math.min(4, 2 + Math.floor((st - 1) / 3)) : Math.min(4, 1 + Math.floor((st - 1) / 3)); }
+  function makeQuestion() {
+    var st = run.stage, boss = run.enemy.boss, ks = run.realm.kinds, kind = ks[0] === '*' ? mixKind() : ks[rint(ks.length)];
+    var d = tierOf(st);
+    if (boss && kind !== 'comma') d = Math.min(4, d + 1);
+    var b = MK[kind](d, boss);
+    var base = Math.max(b.T * 0.5, b.T * (1 - 0.0364 * (st - 1))) + 1.5 * save.lv.clock;
+    b.limit = Math.round(base * (boss ? (b.bossX || 1.3) : 1) * (b.slow || 1) * 10) / 10;
+    if (boss && kind !== 'comma') b.label = 'Chefe · ' + b.label;
+    return b;
+  }
+
+  /* ---------- exibição das perguntas ---------- */
+  function ctxBox(q) { return q.ctx ? '<div class="scroll' + (q.plain ? ' plain' : '') + '">' + q.ctx + '</div>' : ''; }
+  var KIND = {};
+  KIND.comma = {
+    render: function (q) {
+      if (q.mode === 'click') {
+        $('qbox').innerHTML = '<div class="scroll">' + q.words.map(function (w, i) {
+          return '<span class="w">' + esc(w) + '</span>' + (i < q.words.length - 1
+            ? '<button type="button" class="gap" data-i="' + i + '" aria-pressed="false" aria-label="Vírgula depois de ' + esc(w) + '"></button> ' : '');
+        }).join('') + '</div>';
+      } else {
+        $('qbox').innerHTML = '<div class="scroll"><textarea id="qta" rows="' + (run.enemy.boss ? 5 : 3) + '" spellcheck="false" autocomplete="off" autocapitalize="off" aria-label="Texto para pontuar">' + esc(q.words.join(' ')) + '</textarea></div>';
+        var ta = $('qta'); ta.focus(); try { ta.setSelectionRange(0, 0); } catch (e) { /* ignora */ }
+      }
+    },
+    check: function (q, timeout) {
+      var userSet, altered = false, p;
+      if (q.mode === 'click') userSet = q.user;
+      else {
+        p = parseTyped($('qta').value);
+        altered = p.words.length !== q.words.length || p.words.some(function (w, i) { return w !== q.words[i]; });
+        userSet = altered ? {} : p.commas;
+      }
+      var ev = altered ? { missing: [], extra: [] } : evaluate(q.commas, userSet);
+      var ok = !timeout && !altered && !ev.missing.length && !ev.extra.length, cats = [], html = '';
+      ev.missing.forEach(function (i) { cats.push(RULES[q.codeAt[i]].n); });
+      ev.extra.forEach(function () { cats.push(RULES.ext.n); });
+      if (!ok) {
+        var shown = q.words.map(function (w, i) {
+          var s = esc(w);
+          if (q.commas[i]) s += '<b class="cm ' + (!altered && userSet[i] ? 'ok' : 'miss') + '">,</b>';
+          else if (!altered && userSet[i]) s += '<b class="cm extra">,</b>';
+          return s;
+        }).join(' ');
+        html += '<div class="scroll">' + shown + '</div><ul>';
+        ev.missing.forEach(function (i) { html += '<li>Faltou vírgula depois de “' + esc(q.words[i]) + '”. ' + RULES[q.codeAt[i]].t + '</li>'; });
+        ev.extra.forEach(function (i) { html += '<li>Vírgula a mais depois de “' + esc(q.words[i]) + '”. ' + RULES.ext.t + '</li>'; });
+        if (!ev.missing.length && !ev.extra.length && !altered) html += '<li>Estava certo, mas o tempo acabou antes do golpe.</li>';
+        if (altered) html += '<li>Mantenha as palavras como estão e só acrescente as vírgulas.</li>';
+        html += '</ul>';
+      }
+      return { ok: ok, cats: cats, body: html, head: timeout ? 'Tempo esgotado!' : (altered ? 'Você mudou as palavras do texto.' : 'Errou!'),
+        okLine: q.count === 0 ? 'Nenhuma vírgula aqui. ' + RULES.ext.t : 'Cada vírgula no lugar certo.' };
+    }
+  };
+  KIND.choice = {
+    render: function (q) {
+      $('qbox').innerHTML = ctxBox(q) + '<div class="optlist">' + q.opts.map(function (o, i) {
+        return '<button type="button" class="opt" data-i="' + i + '" aria-pressed="false"><span class="kb">' + (i + 1) + '</span>' + esc(o.t) + '</button>';
+      }).join('') + '</div>';
+      q.sel = null;
+    },
+    check: function (q, timeout) {
+      var ch = q.sel == null ? null : q.opts[q.sel], right = q.opts.filter(function (o) { return o.ok; })[0];
+      var ok = !timeout && !!ch && ch.ok, html = '';
+      if (!ok) {
+        html += '<p><span class="tag-ok">Resposta certa:</span> ' + esc(right.t) + '</p>';
+        if (ch && !ch.ok) html += '<p><span class="tag-bad">Sua escolha:</span> ' + esc(ch.t) + (ch.why ? '. ' + esc(ch.why) : '') + '</p>';
+        if (ch && ch.ok) html += '<p>Estava certo, mas o tempo acabou antes do golpe.</p>';
+        else if (!ch) html += '<p>Você não escolheu nenhuma opção.</p>';
+        html += '<p>' + esc(q.why) + '</p>';
+      }
+      return { ok: ok, cats: (ch && ch.ok) ? [] : [q.cat], body: html, head: timeout ? 'Tempo esgotado!' : 'Errou!', okLine: q.why };
+    }
+  };
+  KIND.order = {
+    render: function (q) {
+      q.seq = [];
+      $('qbox').innerHTML = ctxBox(q) + '<div class="optlist">' + q.items.map(function (it, i) {
+        return '<button type="button" class="opt" data-i="' + i + '" aria-pressed="false"><span class="kb"></span>' + esc(it.t) + '</button>';
+      }).join('') + '</div>';
+    },
+    check: function (q, timeout) {
+      var seq = q.seq, ok = !timeout && seq.length === q.need && seq.every(function (idx, k) { return q.items[idx].pos === k; }), html = '';
+      if (!ok) {
+        var good = q.items.filter(function (it) { return it.pos >= 0; }).sort(function (a, b) { return a.pos - b.pos; });
+        html += '<p><span class="tag-ok">Ordem certa:</span></p><ol>' + good.map(function (it) { return '<li><b>' + esc(q.labels[it.pos]) + ':</b> ' + esc(it.t) + '</li>'; }).join('') + '</ol>';
+        if (seq.some(function (idx) { return q.items[idx].pos < 0; })) html += '<p>Você incluiu uma frase solta, que não faz parte do repertório.</p>';
+        else if (seq.length < q.need && !timeout) html += '<p>Faltou escolher ' + (q.need - seq.length) + ' frase(s).</p>';
+        else if (!seq.length) html += '<p>Você não escolheu nenhuma frase.</p>';
+      }
+      return { ok: ok, cats: ok ? [] : [q.cat], body: html, head: timeout ? 'Tempo esgotado!' : 'Errou!', okLine: 'Ordem perfeita: ' + q.labels.join(' → ') + '.' };
+    }
+  };
+  KIND.slots = {
+    render: function (q) {
+      $('qbox').innerHTML = ctxBox(q) + q.slots.map(function (s, si) {
+        return '<fieldset class="slot"><legend>' + (si + 1) + '. ' + SLOTS[s.key].label + '</legend><div class="optlist">' + s.opts.map(function (o, oi) {
+          return '<button type="button" class="opt" data-s="' + si + '" data-o="' + oi + '" aria-pressed="false"><span class="kb">' + String.fromCharCode(97 + oi) + '</span>' + esc(o.t) + '</button>';
+        }).join('') + '</div></fieldset>';
+      }).join('');
+    },
+    check: function (q, timeout) {
+      var cats = [], html = '<ul>', allOk = true;
+      q.slots.forEach(function (s) {
+        var ch = s.sel == null ? null : s.opts[s.sel], right = s.opts.filter(function (o) { return o.ok; })[0], good = !!ch && ch.ok, m = SLOTS[s.key];
+        if (!good) { allOk = false; cats.push(m.cat); }
+        html += '<li><b>' + m.label + ':</b> ' + (good ? '<span class="tag-ok">certo.</span>' : '<span class="tag-bad">' + (ch ? 'não é a melhor opção.' : 'sem resposta.') + '</span> Melhor: ' + esc(right.t) + '. ' + esc(m.tip)) + '</li>';
+      });
+      html += '</ul>';
+      var ok = !timeout && allOk, extra = '';
+      if (ok && q.full) {
+        var th = q.th;
+        extra = '<div class="scroll plain"><p><b>Sua proposta completa:</b></p><p>' + esc(th.ag[0] + ' ' + th.ac[0] + ', ' + th.me[0] + ', ' + th.fi[0] + '. ' + th.de[0]) + '</p></div>';
+      }
+      return { ok: ok, cats: ok ? [] : cats, body: ok ? '' : html, extra: extra, head: timeout ? 'Tempo esgotado!' : 'Proposta incompleta!',
+        okLine: 'Todos os elementos no lugar certo: agente específico, ação, meio, finalidade e detalhamento.' };
+    }
+  };
+  function kindOf(q) { return q.kind === 'comma' ? KIND.comma : q.kind === 'choice' ? KIND.choice : q.kind === 'order' ? KIND.order : KIND.slots; }
+
+  function parseTyped(txt) {
+    var t = txt.replace(/\s+,/g, ',').replace(/,{2,}/g, ',').replace(/,(?=\S)/g, ', ').trim().replace(/^,+\s*/, '');
+    var words = [], commas = {};
+    t.split(/\s+/).forEach(function (tk) {
+      if (!tk) return;
+      var has = tk.charAt(tk.length - 1) === ',';
+      words.push(has ? tk.slice(0, -1) : tk);
+      if (has) commas[words.length - 1] = true;
+    });
+    return { words: words, commas: commas };
+  }
+  function evaluate(expected, user) {
+    var missing = [], extra = [], k;
+    for (k in expected) if (!user[k]) missing.push(+k);
+    for (k in user) if (!expected[k]) extra.push(+k);
+    return { missing: missing, extra: extra };
+  }
+  function renderQ() {
+    $('qmode').textContent = q.label;
+    $('qinst').textContent = q.inst;
+    $('qhint').textContent = q.kind === 'comma' && q.mode === 'type' ? 'Enter também golpeia' : q.kind === 'choice' ? 'Teclas 1 a 4 escolhem. Enter golpeia.' : 'Enter também golpeia';
+    kindOf(q).render(q);
+  }
+  function updOrder() {
+    Array.prototype.forEach.call($('qbox').querySelectorAll('.opt'), function (b) {
+      var i = +b.getAttribute('data-i'), p = q.seq.indexOf(i);
+      b.setAttribute('aria-pressed', p >= 0 ? 'true' : 'false');
+      b.querySelector('.kb').textContent = p >= 0 ? (p + 1) : '';
+    });
+  }
+
+  /* ---------- fluxo da partida ---------- */
+  function startRun(ri) {
+    save.last = ri;
+    run = { realm: REALMS[ri], ri: ri, stage: 1, hp: maxHp(), combo: 0, score: 0, enemy: null, recent: [] };
+    startBattle();
+  }
+  function spawn() {
+    var st = run.stage, R = run.realm, boss = st % 5 === 0, e = boss ? R.boss : R.enemies[(st - 1 - Math.floor(st / 5)) % R.enemies.length];
+    var max = Math.round((50 + 18 * (st - 1)) * (boss ? 2.2 : 1));
+    run.enemy = { name: e[0], type: e[1], boss: boss, hp: max, max: max };
+    an.die = 0;
+  }
+  function startBattle() { spawn(); show('battle'); updBars(); nextQuestion(); }
+  function nextQuestion() {
+    tok++; phase = 'ask'; q = makeQuestion(); renderQ();
+    $('fb').hidden = true; $('qact').hidden = false;
+    t0 = performance.now(); updHud();
+  }
+  function submit(timeout) {
+    if (phase !== 'ask') return;
+    var res = kindOf(q).check(q, timeout), ok = res.ok;
+    var rem = Math.max(0, q.limit - (performance.now() - t0) / 1000), frac = rem / q.limit, now = performance.now();
+    phase = 'feedback'; tok++;
+    $('qact').hidden = true;
+    save.tries++;
+    var e = run.enemy;
+
+    if (ok) {
+      save.hits++;
+      run.combo++;
+      var dmg = Math.round((14 + 6 * save.lv.sword) * (1 + 0.5 * frac) * (1 + 0.1 * Math.min(run.combo, 10)));
+      e.hp -= dmg;
+      run.score += Math.round((100 + 100 * frac) * (1 + 0.1 * Math.min(run.combo, 10)));
+      var gain = Math.round((2 + Math.min(run.combo, 5)) * (1 + 0.15 * save.lv.luck));
+      save.coins += gain;
+      an.hAtk = now; an.eHit = now + 200;
+      floats.push({ t: '-' + dmg, x: 340, y: 90, t0: now + 200, c: '#ffe27a' });
+      sfx.hit();
+      var msg = '<h3>Golpe certeiro! −' + dmg + '</h3><p>' + esc(res.okLine) + ' Combo x' + run.combo + ', +' + gain + ' moedas.</p>' + (res.extra || '');
+      if (e.hp <= 0) {
+        var kill = Math.round((8 + 4 * run.stage) * (1 + 0.15 * save.lv.luck) * (e.boss ? 3 : 1));
+        save.coins += kill; run.killCoins = kill + gain; run.score += 200 * run.stage;
+        an.die = now + 350;
+        msg += '<p>' + esc(e.name) + ' foi derrotado!</p>';
+        sfx.kill();
+        showFb(true, msg, '', false);
+        setTimeout(victory, q.kind === 'comma' ? 1500 : 2600);
+      } else if (q.kind === 'comma') {
+        var my = tok; setTimeout(function () { if (tok === my) nextQuestion(); }, 1100);
+        showFb(true, msg, '', false);
+      } else {
+        showFb(true, msg, '', 'Próxima');
+      }
+    } else {
+      run.combo = 0;
+      var hurt = Math.max(6, Math.round((16 + 2 * run.stage) * (e.boss ? 1.4 : 1)) - 2 * save.lv.helm);
+      run.hp -= hurt;
+      an.eAtk = now; an.hHit = now + 200;
+      floats.push({ t: '-' + hurt, x: 70, y: 80, t0: now + 200, c: '#ff8a8a' });
+      sfx.miss();
+      res.cats.forEach(function (n) { save.miss[n] = (save.miss[n] || 0) + 1; });
+      showFb(false, '<h3>' + res.head + ' O inimigo ataca (−' + hurt + ')</h3>', res.body, run.hp <= 0 ? 'Ver resultado' : 'Continuar');
+    }
+    persist(); updBars(); updHud();
+  }
+  function showFb(ok, head, body, nextLabel) {
+    var html = head + body;
+    if (nextLabel) html += '<div class="actions"><button class="btn" id="bnext" type="button">' + nextLabel + '</button></div>';
+    var fb = $('fb');
+    fb.className = 'fb ' + (ok ? 'good' : 'badc');
+    fb.innerHTML = html; fb.hidden = false;
+    var b = $('bnext');
+    if (b) { b.addEventListener('click', function () { if (run.hp <= 0) gameOver(); else nextQuestion(); }); b.focus(); }
+  }
+
+  function victory() {
+    if (scr !== 'battle') return;
+    var rid = run.realm.id, R = save.realms[rid] = save.realms[rid] || { best: 0, bestScore: 0 }, prev = R.best;
+    var heal = Math.round(maxHp() * 0.25), before = run.hp;
+    run.hp = Math.min(maxHp(), run.hp + heal);
+    if (run.stage > R.best) R.best = run.stage;
+    if (run.score > R.bestScore) R.bestScore = run.score;
+    persist();
+    var note = '';
+    if (prev < 5 && R.best >= 5) {
+      if (run.ri + 1 < REALMS.length) note += ' Novo reino liberado: ' + REALMS[run.ri + 1].name + '.';
+      note += ' Nova capa no guarda-roupa: ' + CAPES[run.ri + 1].n + '.';
+    }
+    if (prev < 10 && R.best >= 10) note += ' Segunda estrela deste reino!';
+    if (prev < 15 && R.best >= 15) note += ' Terceira estrela: você domina este reino!';
+    shopCtx = 'victory';
+    $('shtitle').textContent = run.enemy.boss ? 'Chefe derrotado!' : 'Inimigo derrotado!';
+    $('shbanner').textContent = 'Você ganhou ' + run.killCoins + ' moedas e recuperou ' + (run.hp - before) + ' de vida.' + note + ' Gaste no ferreiro antes do próximo inimigo.';
+    $('shgo').textContent = 'Próximo inimigo';
+    renderShop(); show('shop');
+  }
+  function gameOver() {
+    var rid = run.realm.id, R = save.realms[rid] = save.realms[rid] || { best: 0, bestScore: 0 };
+    if (run.stage - 1 > R.best) R.best = run.stage - 1;
+    if (run.score > R.bestScore) R.bestScore = run.score;
+    persist();
+    shopCtx = 'dead';
+    var w = weakest();
+    $('shtitle').textContent = 'Você caiu na fase ' + run.stage + ' (' + run.realm.name + ')';
+    $('shbanner').textContent = 'Pontos nesta partida: ' + run.score + '. As moedas e melhorias ficam com você.' + (w ? ' Erro mais frequente: ' + w.name + '. ' + tipFor(w.name) : '');
+    $('shgo').textContent = 'Nova partida';
+    renderShop(); show('shop');
+  }
+
+  /* ---------- loja e guarda-roupa ---------- */
+  function cost(it) { return Math.round(it.base * Math.pow(1.55, save.lv[it.k])); }
+  function renderShop() {
+    var html = '';
+    ITEMS.forEach(function (it) {
+      var l = save.lv[it.k], full = l >= it.max, c = cost(it), pips = '';
+      for (var i = 0; i < it.max; i++) pips += '<i class="' + (i < l ? 'on' : '') + '"></i>';
+      html += '<li><div><div class="nm">' + it.n + ' (nível ' + l + ')</div><div class="fx">' + it.fx(l) + (full ? '' : ' → ' + it.fx(l + 1)) + '</div>' +
+        '<div class="sk">Visual: ' + skinName(it.k) + '</div><div class="pips">' + pips + '</div></div>' +
+        '<button type="button" class="btn" data-buy="' + it.k + '"' + ((full || save.coins < c) ? ' aria-disabled="true"' : '') + '>' + (full ? 'Máximo' : 'Comprar ' + c) + '</button></li>';
+    });
+    var inRun = !!run && shopCtx === 'victory', needs = inRun && run.hp < maxHp();
+    html += '<li><div><div class="nm">Poção de vida</div><div class="fx">' + (inRun ? 'Recupera 40 de vida agora.' : 'Só pode ser usada durante uma partida.') + '</div></div>' +
+      '<button type="button" class="btn" data-buy="potion"' + ((!needs || save.coins < 25) ? ' aria-disabled="true"' : '') + '>' + (inRun && !needs ? 'Vida cheia' : 'Comprar 25') + '</button></li>';
+    $('shlist').innerHTML = html;
+    var sw = CAPES.map(function (c, i) {
+      var open = capeOpen(i);
+      return '<button type="button" class="sw" data-cape="' + i + '" style="background:' + c.c + '" aria-pressed="' + ((save.cape || 0) === i ? 'true' : 'false') + '"' + (open ? '' : ' aria-disabled="true"') +
+        ' aria-label="Capa ' + c.n + (open ? '' : ' (bloqueada)') + '" title="' + c.n + (open ? '' : ': vença o chefe de ' + REALMS[c.need].name) + '"></button>';
+    }).join('');
+    $('shward').innerHTML = '<h3>Guarda-roupa</h3><p>Visual atual: <b>' + skinName('armor') + '</b>, ' + skinName('sword').toLowerCase() + ', ' + skinName('helm').toLowerCase() + '.</p>' +
+      '<p class="hint">Capa ' + CAPES[save.cape || 0].n.toLowerCase() + '. Cada capa nova é liberada ao vencer o chefe de um reino.</p><div class="swatches">' + sw + '</div>';
+    updHud();
+  }
+  function buy(k) {
+    if (k === 'potion') {
+      if (!run || shopCtx !== 'victory' || run.hp >= maxHp() || save.coins < 25) return;
+      save.coins -= 25; run.hp = Math.min(maxHp(), run.hp + 40);
+    } else {
+      var it = ITEMS.filter(function (x) { return x.k === k; })[0], c = cost(it);
+      if (save.lv[k] >= it.max || save.coins < c) return;
+      save.coins -= c; save.lv[k]++;
+      if (k === 'armor' && run) run.hp += 25;
+    }
+    sfx.buy(); persist(); renderShop(); updBars();
+  }
+
+  /* ---------- mapa ---------- */
+  function weakList() {
+    var arr = [], k;
+    for (k in save.miss) if (save.miss[k] > 0) arr.push({ name: k, n: save.miss[k] });
+    arr.sort(function (a, b) { return b.n - a.n; });
+    return arr;
+  }
+  function weakest() { var w = weakList(); return w.length ? w[0] : null; }
+  function tipFor(name) {
+    if (CATS[name]) return CATS[name];
+    for (var k in RULES) if (RULES[k].n === name) return RULES[k].t;
+    return '';
+  }
+  function renderMenu() {
+    var done = 0, bestScore = 0;
+    $('realms').innerHTML = REALMS.map(function (R, i) {
+      var b = realmBest(i), st = starsOf(b), open = unlocked(i);
+      if (b >= 5) done++;
+      bestScore = Math.max(bestScore, (save.realms[R.id] || {}).bestScore || 0);
+      return '<button type="button" class="realm" data-r="' + i + '"' + (open ? '' : ' aria-disabled="true"') + '><span class="rt">' + R.name + '</span>' +
+        '<span class="rs" aria-label="' + st + ' de 3 estrelas">' + '★★★'.slice(0, st) + '☆☆☆'.slice(0, 3 - st) + '</span><span class="rd">' + R.desc + '</span>' +
+        '<span class="rb">' + (open ? 'Melhor fase: ' + b : 'Bloqueado: vença o chefe da fase 5 de ' + REALMS[i - 1].name) + '</span></button>';
+    }).join('');
+    var pct = save.tries ? Math.round(save.hits / save.tries * 100) + '%' : '–';
+    $('mfacts').innerHTML =
+      '<div><dt>Reinos concluídos</dt><dd>' + done + '/' + REALMS.length + '</dd></div>' +
+      '<div><dt>Recorde de pontos</dt><dd>' + bestScore + '</dd></div>' +
+      '<div><dt>Acertos</dt><dd>' + pct + '</dd></div>';
+    var w = weakList(), el = $('weak');
+    if (w.length) {
+      el.hidden = false;
+      el.innerHTML = 'Seus erros mais frequentes: ' + w.slice(0, 3).map(function (x) { return '<b>' + esc(x.name) + '</b> (' + x.n + ')'; }).join(', ') + '. Dica: ' + esc(tipFor(w[0].name));
+    } else el.hidden = true;
+    Array.prototype.forEach.call(document.querySelectorAll('#modeseg button'), function (b) {
+      b.setAttribute('aria-pressed', b.getAttribute('data-mode') === save.mode ? 'true' : 'false');
+    });
+  }
+  function toMenu() { run = null; q = null; phase = 'menu'; tok++; renderMenu(); show('menu'); }
+
+  /* ---------- sala da redação ---------- */
+  var STOP = ('para como mais mas pois quando porque também sobre entre depois antes ainda muito muitos muitas assim essa esse esses essas dessa desse isso aquele aquela seus suas pela pelo pelas pelos onde cada outros outras outro outra tudo todos todas foram sendo está estão tem têm havia ' +
+    'pode podem deve devem forma modo maneira outras tanto mesmo mesma então porém contudo portanto ademais além disso nesse nessa neste desta deste dessas desses seja sejam fazer feito vezes cada qual quais quem').split(' ');
+  var CONNS = 'Ademais|Portanto|Além disso|Nesse sentido|Por fim|Dessa forma|Dessa maneira|Em suma|Em síntese|Em contrapartida|Por outro lado|Contudo|Entretanto|Todavia|Sobretudo|Primeiramente|Nesse contexto|Diante disso|Em primeiro lugar|Em segundo lugar|Em primeiro plano|Em conclusão';
+  function paragraphsOf(t) { return t.split(/\n+/).map(function (s) { return s.trim(); }).filter(Boolean); }
+  function analyze(text) {
+    var out = [], paras = paragraphsOf(text), words = text.trim() ? text.trim().split(/\s+/).length : 0, m, list;
+    var re = new RegExp('(^|[.!?]\\s+|\\n\\s*)(' + CONNS + ')(?=\\s+[A-Za-zÀ-ú])', 'g'), miss = [];
+    while ((m = re.exec(text))) miss.push(m[2]);
+    out.push({ l: 'Vírgula depois de todo conectivo inicial', ok: !miss.length, d: miss.length ? 'Sem vírgula depois de: ' + miss.slice(0, 4).join(', ') + '.' : 'Nenhum conectivo inicial sem vírgula.' });
+    list = [];
+    if (/\bPor tanto\b/i.test(text)) list.push('“Por tanto” (use Portanto)');
+    if (/\bAlem disso\b/i.test(text)) list.push('“Alem disso” (use Além disso)');
+    if (/\bA demais\b|\bAdemáis\b/.test(text)) list.push('“A demais” (use Ademais)');
+    if (/\bafim de\b/i.test(text)) list.push('“afim de” (use a fim de)');
+    if (/\bmal uso\b/i.test(text)) list.push('“mal uso” (use mau uso)');
+    out.push({ l: 'Portanto, Além disso e Ademais escritos certo', ok: !list.length, d: list.length ? 'Confira: ' + list.join('; ') + '.' : 'Nenhum erro conhecido encontrado.' });
+    list = [];
+    if (/(^|[^A-Za-zÀ-ú])(o hobbit|O hobbit|o Hobbit)(?![A-Za-zÀ-ú])/.test(text)) list.push('O Hobbit');
+    if (/\b(the economist|The economist|THE ECONOMIST)\b/.test(text)) list.push('The Economist');
+    out.push({ l: 'Nomes de obras e revistas corretos', ok: !list.length, d: list.length ? 'Confira a grafia de: ' + list.join(', ') + '.' : 'Nenhum nome grafado errado encontrado.' });
+    var last = paras.length ? paras[paras.length - 1] : '', gen = /\b(o governo|a sociedade|todos nós|as autoridades|o estado)\b/i.exec(last);
+    var spec = /(Ministério|Secretaria|Congresso|Agência|Instituto|Prefeitura|Câmara|Conselho|Universidade|Anatel|IBGE|Tribunal|Defensoria)/.test(last);
+    out.push({ l: 'Agente específico na proposta', ok: !gen && spec, d: gen ? 'Agente genérico na conclusão: “' + gen[1] + '”. Use um órgão, como o Ministério da Educação.' : (spec ? 'Há um agente específico na conclusão.' : 'Não achei um órgão específico na conclusão.') });
+    out.push({ l: 'Repertório explicado e ligado à tese', manual: true });
+    var rep = [], pi;
+    paras.forEach(function (p, idx) {
+      var cnt = {}, w = p.toLowerCase().replace(/[^a-zà-ú\s-]/g, ' ').split(/\s+/);
+      w.forEach(function (x) { if (x.length >= 6 && STOP.indexOf(x) < 0) cnt[x] = (cnt[x] || 0) + 1; });
+      for (pi in cnt) if (cnt[pi] > 2) rep.push('“' + pi + '” ' + cnt[pi] + 'x no parágrafo ' + (idx + 1));
+    });
+    var cen = (text.toLowerCase().match(/nesse cenário/g) || []).length;
+    if (cen > 1) rep.push('“nesse cenário” ' + cen + 'x no texto');
+    out.push({ l: 'Nenhuma palavra repetida mais de duas vezes por parágrafo', ok: !rep.length, d: rep.length ? rep.slice(0, 4).join('; ') + '.' : 'Nenhuma repetição excessiva encontrada.' });
+    out.push({ l: 'Quatro parágrafos separados', ok: paras.length === 4, d: paras.length === 4 ? 'Você tem 4 parágrafos.' : 'Você tem ' + paras.length + ' parágrafo(s). Separe em 4: introdução, D1, D2 e conclusão.' });
+    return { checks: out, words: words, paras: paras.length, lines: Math.round(words / 11) };
+  }
+  function renderWrite() {
+    var text = $('wtext').value, a = analyze(text), has = text.trim().length > 20;
+    $('wcount').textContent = a.words + ' palavras · ' + a.paras + ' parágrafo(s) · cerca de ' + a.lines + ' linhas (o alvo é 25 a 30)';
+    $('wcheck').innerHTML = a.checks.map(function (c, i) {
+      if (c.manual) return '<li><span class="st ' + (save.repOk ? 'ok' : 'idle') + '">' + (save.repOk ? 'Ok' : 'Você') + '</span><label><input type="checkbox" id="wrep"' + (save.repOk ? ' checked' : '') + '> ' + c.l + '</label><span class="dt">Marque quando o repertório tiver 3 frases: apresenta, explica e conecta.</span></li>';
+      var st = !has ? 'idle' : c.ok ? 'ok' : 'warn';
+      return '<li><span class="st ' + st + '">' + (!has ? '–' : c.ok ? 'Ok' : 'Atenção') + '</span><span>' + c.l + '</span><span class="dt">' + (has ? esc(c.d) : 'Escreva o texto para conferir.') + '</span></li>';
+    }).join('');
+  }
+  function renderHist() {
+    var ess = save.essays || [];
+    $('whist').innerHTML = ess.length ? ess.slice(-8).map(function (e, i, arr) {
+      var prev = i > 0 ? arr[i - 1].score : (ess.length > arr.length ? ess[ess.length - arr.length - 1].score : 640), df = e.score - prev;
+      return '<li>' + esc(e.date) + ' · ' + esc(THEMES[e.theme] || '') + ': <b>' + e.score + '</b> (' + (df >= 0 ? '+' : '') + df + ')</li>';
+    }).join('') : '<li>Nenhuma nota registrada ainda. Sua base é ~640.</li>';
+  }
+  function openWrite() {
+    $('wtheme').innerHTML = THEMES.map(function (t, i) { return '<option value="' + i + '">' + (i + 1) + '. ' + esc(t) + '</option>'; }).join('');
+    $('wtheme').value = save.theme || 0;
+    $('wtext').value = save.draft || '';
+    $('wmsg').textContent = '';
+    renderWrite(); renderHist(); show('write');
+  }
+  function buildPrompt() {
+    return 'Você é meu professor de redação. Responda sempre em português do Brasil, de forma direta e honesta. Não infle notas: prefiro uma avaliação rigorosa e realista.\n\n' +
+      'Contexto: estou me preparando para a prova de redação do processo seletivo do curso de Tecnologia em Análise e Desenvolvimento de Sistemas (TADS) do IFSul, campus Venâncio Aires. Minha última redação foi estimada em ~640/1000 (estilo ENEM).\n' +
+      'Meus pontos a melhorar: vírgulas (conectivos iniciais, expressões intercaladas, adjunto deslocado, sujeito separado do verbo), agente genérico na proposta, repertório pouco explicado, introdução misturada com o primeiro argumento, repetição de palavras e detalhes de escrita (Portanto, Além disso, O Hobbit, The Economist).\n\n' +
+      'Tarefa (Modo 4: redação completa): corrija a redação abaixo com nota por competência (C1 a C5, 0 a 200 cada), indicando erros de vírgula, ortografia, coesão, repertório e proposta. Explique o motivo de cada correção em uma frase curta. Mostre uma versão reescrita dos trechos mais fracos e compare com minha nota anterior (~640). Use o checklist: vírgula depois de conectivo inicial, Portanto/Além disso/Ademais certos, nomes de obras corretos, agente específico, repertório explicado, nenhuma palavra repetida mais de duas vezes por parágrafo e quatro parágrafos separados. Ao final, diga qual é meu erro mais frequente e sugira o próximo exercício.\n\n' +
+      'Tema: ' + THEMES[+$('wtheme').value] + '\n\nRedação:\n' + $('wtext').value.trim();
+  }
+  function copyText(txt) {
+    if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(txt);
+    return new Promise(function (res, rej) {
+      var ta = document.createElement('textarea'); ta.value = txt; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy') ? res() : rej(); } catch (e) { rej(e); } document.body.removeChild(ta);
+    });
+  }
+
+  /* ---------- eventos ---------- */
+  $('realms').addEventListener('click', function (e) {
+    var b = e.target.closest('.realm');
+    if (b && b.getAttribute('aria-disabled') !== 'true') startRun(+b.getAttribute('data-r'));
+  });
+  $('mshop').addEventListener('click', function () {
+    run = null; shopCtx = 'menu';
+    $('shtitle').textContent = 'Loja do ferreiro';
+    $('shbanner').textContent = 'Melhore o cavaleiro com as moedas que ganhou. Cada melhoria muda a aparência dele. Os efeitos valem para todas as partidas.';
+    $('shgo').textContent = 'Voltar ao mapa';
+    renderShop(); show('shop');
+  });
+  $('mwrite').addEventListener('click', openWrite);
+  $('shgo').addEventListener('click', function () {
+    if (shopCtx === 'victory') { run.stage++; startBattle(); }
+    else if (shopCtx === 'dead') startRun(run.ri);
+    else toMenu();
+  });
+  $('shmenu').addEventListener('click', toMenu);
+  $('shlist').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-buy]');
+    if (b && b.getAttribute('aria-disabled') !== 'true') buy(b.getAttribute('data-buy'));
+  });
+  $('shward').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-cape]');
+    if (b && b.getAttribute('aria-disabled') !== 'true') { save.cape = +b.getAttribute('data-cape'); sfx.buy(); persist(); renderShop(); }
+  });
+  $('modeseg').addEventListener('click', function (e) {
+    var b = e.target.closest('button');
+    if (!b) return;
+    save.mode = b.getAttribute('data-mode'); persist(); renderMenu();
+  });
+  $('snd').addEventListener('click', function () { save.sound = !save.sound; persist(); updHud(); });
+  $('bgo').addEventListener('click', function () { submit(false); });
+  $('qbox').addEventListener('click', function (e) {
+    if (phase !== 'ask') return;
+    var g = e.target.closest('.gap'), o = e.target.closest('.opt'), i;
+    if (g && q.kind === 'comma') {
+      i = g.getAttribute('data-i');
+      if (q.user[i]) { delete q.user[i]; g.setAttribute('aria-pressed', 'false'); g.textContent = ''; }
+      else { q.user[i] = true; g.setAttribute('aria-pressed', 'true'); g.textContent = ','; }
+    } else if (o && q.kind === 'choice') {
+      q.sel = +o.getAttribute('data-i');
+      Array.prototype.forEach.call($('qbox').querySelectorAll('.opt'), function (x) { x.setAttribute('aria-pressed', x === o ? 'true' : 'false'); });
+    } else if (o && q.kind === 'order') {
+      i = +o.getAttribute('data-i');
+      var p = q.seq.indexOf(i);
+      if (p >= 0) q.seq.splice(p, 1); else if (q.seq.length < q.items.length) q.seq.push(i);
+      updOrder();
+    } else if (o && q.kind === 'slots') {
+      var si = +o.getAttribute('data-s'), oi = +o.getAttribute('data-o');
+      q.slots[si].sel = oi;
+      Array.prototype.forEach.call(o.parentNode.querySelectorAll('.opt'), function (x) { x.setAttribute('aria-pressed', x === o ? 'true' : 'false'); });
+    }
+  });
+  document.addEventListener('keydown', function (e) {
+    if (phase !== 'ask' || scr !== 'battle') return;
+    var tag = e.target && e.target.tagName;
+    if (e.key === 'Enter') { e.preventDefault(); submit(false); }
+    else if (q.kind === 'choice' && /^[1-9]$/.test(e.key) && tag !== 'TEXTAREA') {
+      var b = $('qbox').querySelectorAll('.opt')[+e.key - 1];
+      if (b) b.click();
+    }
+  });
+  $('wtheme').addEventListener('change', function () { save.theme = +$('wtheme').value; persist(); });
+  $('wrand').addEventListener('click', function () { var i = rint(THEMES.length); $('wtheme').value = i; save.theme = i; persist(); });
+  $('wtext').addEventListener('input', function () { save.draft = $('wtext').value; persist(); renderWrite(); });
+  $('wcheck').addEventListener('change', function (e) {
+    if (e.target && e.target.id === 'wrep') { save.repOk = e.target.checked; persist(); renderWrite(); }
+  });
+  $('wclear').addEventListener('click', function () {
+    if ($('wtext').value.trim() && !window.confirm('Apagar o texto da redação?')) return;
+    $('wtext').value = ''; save.draft = ''; save.repOk = false; persist(); renderWrite();
+  });
+  $('wback').addEventListener('click', toMenu);
+  $('wcopy').addEventListener('click', function () {
+    if ($('wtext').value.trim().length < 50) { $('wmsg').textContent = 'Escreva a redação antes de copiar o pedido.'; return; }
+    copyText(buildPrompt()).then(function () {
+      $('wmsg').textContent = 'Pedido copiado. Cole no Claude para receber a correção com nota de C1 a C5.';
+    }, function () {
+      $('wmsg').textContent = 'Não consegui copiar sozinho. Selecione o texto da redação e copie manualmente.';
+    });
+  });
+  $('wsave').addEventListener('click', function () {
+    var v = parseInt($('wnote').value, 10);
+    if (isNaN(v) || v < 0 || v > 1000) { $('wmsg').textContent = 'Digite uma nota de 0 a 1000.'; return; }
+    save.essays.push({ date: new Date().toLocaleDateString('pt-BR'), theme: +$('wtheme').value, score: v });
+    save.coins += 60; persist(); $('wnote').value = '';
+    $('wmsg').textContent = 'Nota registrada. +60 moedas para a loja.'; sfx.buy(); renderHist(); updHud();
+  });
+
+  /* ---------- desenho ---------- */
+  var cv = $('cv'), cx = cv.getContext('2d'), DPR = Math.min(2, window.devicePixelRatio || 1);
+  cv.width = 480 * DPR; cv.height = 200 * DPR; cx.setTransform(DPR, 0, 0, DPR, 0, 0); cx.imageSmoothingEnabled = false;
+  var W = 480, H = 200, G = 168, stars = [], seed = 7;
+  function rnd() { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; }
+  for (var si = 0; si < 34; si++) stars.push([Math.floor(rnd() * W), Math.floor(rnd() * 100), rnd() < 0.3 ? 2 : 1]);
+
+  var AP = [
+    ['#8b6b43', '#6b4f2e', '#5a4630', '#3a2c1c'],
+    ['#4f8a52', '#2f5a33', '#3d5a3f', '#2a2438'],
+    ['#8e9aab', '#5b6378', '#4b4f66', '#2a2438'],
+    ['#3fa7d6', '#1f6f96', '#2f4a7a', '#2a2438'],
+    ['#e0b43a', '#a97a1e', '#7a2f3a', '#5b3a1e'],
+    ['#a96cff', '#f2b84b', '#4b2f86', '#f2b84b']
+  ];
+  var BLADE = ['#a9854f', '#b9c0c8', '#d9dfe6', '#7fe0ff', '#ffe27a', '#ff7ad9'];
+
+  function drawHero(x, y, u, now, flash) {
+    var T = tiers(), P = AP[T.a], ga = cx.globalAlpha, K = '#2a2438', skin = '#f0c9a0';
+    var f = function (c) { return flash ? '#fff' : c; };
+    var R = function (gx, gy, w, h, c) { cx.fillStyle = f(c); cx.fillRect(x + gx * u, y + gy * u, w * u, h * u); };
+    y += Math.round(Math.sin(now / 300) * 0.5 * u);
+    if (T.a >= 4 && !flash) {
+      cx.globalAlpha = ga * (T.a === 5 ? 0.22 + 0.08 * Math.sin(now / 200) : 0.12);
+      cx.fillStyle = T.a === 5 ? '#c9a6ff' : '#ffe27a';
+      cx.beginPath(); cx.arc(x + 8 * u, y + 10 * u, 13 * u, 0, 6.3); cx.fill();
+      cx.globalAlpha = ga;
+    }
+    if (T.a === 5) { R(-5, 5, 4, 2, '#fff3b0'); R(-4, 7, 4, 2, '#fff3b0'); R(-3, 9, 3, 1, '#fff3b0'); R(17, 5, 4, 2, '#fff3b0'); R(16, 7, 4, 2, '#fff3b0'); }
+    var cape = CAPES[save.cape || 0].c, sway = Math.round(Math.sin(now / 260));
+    if (T.a >= 2) {
+      R(-2, 7, 5, 10 + (T.a >= 4 ? 2 : 0), cape); R(-3 + sway, 13, 2, 5, cape); R(0, 8, 1, 8, 'rgba(0,0,0,.22)');
+    } else { R(2, 7, 3, 2, cape); R(0, 8, 2, 4, cape); }
+    R(4, 14, 3, 4, P[2]); R(9, 14, 3, 4, P[2]);
+    if (T.a >= 4) { R(4, 16, 3, 1, P[1]); R(9, 16, 3, 1, P[1]); }
+    R(4, 18, 3, 2, P[3]); R(9, 18, 3, 2, P[3]);
+    R(3, 7, 10, 7, P[0]); R(3, 12, 10, 1, P[1]);
+    R(1, 7, 2, 6, P[0]); R(13, 7, 2, 6, P[0]); R(1, 13, 2, 1, skin); R(13, 13, 2, 1, skin);
+    if (T.a === 1) R(7, 8, 2, 4, P[1]);
+    if (T.a === 2) { R(4, 8, 8, 4, '#b9c0c8'); R(7, 8, 2, 2, P[1]); }
+    if (T.a === 3) { R(6, 8, 4, 5, '#f4f4f4'); R(7, 9, 2, 2, '#e5484d'); }
+    if (T.a === 4) { R(4, 8, 8, 1, '#fff3b0'); R(7, 9, 2, 2, '#e5484d'); R(3, 7, 10, 1, P[1]); }
+    if (T.a === 5) { R(3, 7, 10, 1, P[1]); R(7, 8, 2, 5, P[1]); R(7, 9, 2, 2, '#7fe0ff'); }
+    if (T.a >= 3) { R(0, 6, 3, 2, P[1]); R(13, 6, 3, 2, P[1]); }
+    if (T.a >= 4) { R(0, 5, 3, 1, P[1]); R(13, 5, 3, 1, P[1]); }
+    R(5, 3, 6, 4, skin);
+    var eye = T.a === 5 ? '#7fe0ff' : K;
+    R(6, 4, 1, 1, eye); R(9, 4, 1, 1, eye);
+    if (T.h === 0) {
+      if (T.a === 1) { R(4, 0, 8, 3, P[0]); R(4, 3, 1, 4, P[0]); R(11, 3, 1, 4, P[0]); }
+      else { R(4, 1, 8, 2, '#5b3a1e'); R(4, 3, 1, 2, '#5b3a1e'); R(11, 3, 1, 2, '#5b3a1e'); }
+    } else if (T.h === 1) { R(4, 0, 8, 3, '#8b5a2b'); R(4, 3, 1, 2, '#8b5a2b'); R(11, 3, 1, 2, '#8b5a2b'); }
+    else if (T.h === 2) { R(4, 0, 8, 3, '#8e9aab'); R(4, 3, 1, 3, '#8e9aab'); R(11, 3, 1, 3, '#8e9aab'); R(7, 3, 2, 2, '#8e9aab'); }
+    else if (T.h === 3) { R(4, 0, 8, 3, '#3fa7d6'); R(4, 3, 1, 3, '#3fa7d6'); R(11, 3, 1, 3, '#3fa7d6'); R(7, -3, 2, 3, '#e5484d'); }
+    else { R(4, 0, 8, 3, '#e0b43a'); R(4, 3, 1, 3, '#e0b43a'); R(11, 3, 1, 3, '#e0b43a'); R(1, 0, 3, 2, '#fff'); R(12, 0, 3, 2, '#fff'); R(7, -3, 2, 3, '#ff7ad9'); }
+    if (T.c > 0) {
+      var fr = ['', '#8b5a2b', '#b9c0c8', '#e0b43a'][T.c];
+      R(4, 12, 2, 1, fr); R(4, 13, 2, 1, T.c === 3 ? '#7fe0ff' : '#e8d9a0'); R(4, 14, 2, 1, fr);
+    }
+    if (T.g > 0) {
+      var pc = ['', '#6b4423', '#8b5a2b', '#e0b43a'][T.g];
+      R(11, 12, 2 + (T.g >= 2 ? 1 : 0), 2 + (T.g >= 2 ? 1 : 0), pc);
+      if (T.g >= 2) R(12, 12, 1, 1, '#ffe27a');
+      if (T.g === 3 && !flash && Math.floor(now / 220) % 2) { R(14, 11, 1, 1, '#fff3b0'); R(10, 14, 1, 1, '#fff3b0'); }
+    }
+    var a = (now - an.hAtk) / 450, ang = 0.1 + (a >= 0 && a < 1 ? 1.5 * Math.sin(a * Math.PI) : 0), len = 8 + T.s;
+    cx.save();
+    cx.translate(x + 14.5 * u, y + 11 * u); cx.rotate(ang);
+    if (T.s >= 3 && !flash) { cx.shadowColor = BLADE[T.s]; cx.shadowBlur = 6 + T.s; }
+    cx.fillStyle = f(BLADE[T.s]); cx.fillRect(-u, -len * u, 2 * u, len * u);
+    cx.shadowBlur = 0;
+    if (T.s >= 1) { cx.fillStyle = f('#fff'); cx.fillRect(-0.4 * u, -len * u, 0.8 * u, (len - 1) * u); }
+    if (T.s === 5 && !flash) {
+      cx.fillStyle = '#ffb86b';
+      for (var k = 0; k < 3; k++) cx.fillRect((Math.sin(now / 90 + k * 2) * 1.6 - 0.3) * u, (-len - 1 - ((now / 60 + k * 3) % 5)) * u, 0.7 * u, 0.7 * u);
+    }
+    cx.fillStyle = f('#e0b43a'); cx.fillRect(-2.5 * u, 0, 5 * u, u);
+    cx.fillStyle = f('#6b4423'); cx.fillRect(-0.5 * u, u, u, 2 * u);
+    cx.restore();
+  }
+  function drawSpr(sp, x, y, u, flash) {
+    sp.rows.forEach(function (row, r) {
+      for (var c = 0; c < 8; c++) {
+        var ch = row.charAt(c);
+        if (ch === '.') continue;
+        cx.fillStyle = flash ? '#fff' : sp.pal[ch];
+        cx.fillRect(x + c * u, y + r * u, u, u);
+        cx.fillRect(x + (15 - c) * u, y + r * u, u, u);
+      }
+    });
+  }
+  function drawEnemy(e, x, y, u, now, flash) {
+    if (typeof e.type === 'string') { drawSpr(SPR[e.type], x, y, u, flash); return; }
+    var f = function (c) { return flash ? '#fff' : c; };
+    var R = function (gx, gy, w, h, c) { cx.fillStyle = f(c); cx.fillRect(x + gx * u, y + gy * u, w * u, h * u); };
+    var K = '#1c1630', Wt = '#ffffff';
+    switch (e.type) {
+      case 0:
+        R(2, 8, 12, 7, '#4cc38a'); R(4, 6, 8, 3, '#4cc38a'); R(6, 4, 4, 2, '#4cc38a'); R(3, 15, 10, 1, '#2f8f63');
+        R(4, 9, 3, 3, Wt); R(9, 9, 3, 3, Wt); R(4, 10, 1, 2, K); R(9, 10, 1, 2, K); R(6, 13, 4, 1, K);
+        break;
+      case 1:
+        R(8, 0, 1, 2, '#8a93a6'); R(7, -1, 3, 1, '#ef5b5b');
+        R(3, 2, 10, 8, '#8a93a6'); R(4, 4, 3, 2, '#ef5b5b'); R(9, 4, 3, 2, '#ef5b5b'); R(5, 7, 6, 1, K); R(5, 8, 6, 1, '#5b6378');
+        R(4, 10, 8, 6, '#6b7490'); R(1, 10, 3, 2, '#8a93a6'); R(12, 10, 3, 2, '#8a93a6'); R(6, 12, 4, 2, '#ffe27a');
+        break;
+      case 2:
+        var fl = Math.round(Math.sin(now / 120) * 2);
+        R(0, 4 + fl, 6, 3, '#7a4fc9'); R(10, 4 + fl, 6, 3, '#7a4fc9'); R(1, 7 + fl, 4, 2, '#7a4fc9'); R(11, 7 + fl, 4, 2, '#7a4fc9');
+        R(6, 5, 4, 8, '#4a2f86'); R(5, 3, 6, 4, '#4a2f86'); R(5, 2, 1, 2, '#4a2f86'); R(10, 2, 1, 2, '#4a2f86');
+        R(6, 4, 1, 1, '#ffe27a'); R(9, 4, 1, 1, '#ffe27a'); R(7, 6, 2, 1, Wt);
+        break;
+      case 3:
+        R(3, 2, 10, 12, '#e6eaff'); R(4, 1, 8, 1, '#e6eaff');
+        R(3, 14, 2, 2, '#e6eaff'); R(7, 14, 2, 2, '#e6eaff'); R(11, 14, 2, 2, '#e6eaff');
+        R(5, 5, 2, 3, K); R(9, 5, 2, 3, K); R(7, 10, 3, 2, K);
+        break;
+      case 4:
+        R(3, 1, 10, 6, '#7d9a4a'); R(2, 3, 1, 2, '#7d9a4a'); R(13, 3, 1, 2, '#7d9a4a'); R(5, 3, 2, 2, '#ffe27a'); R(9, 3, 2, 2, '#ffe27a'); R(6, 5, 4, 1, K);
+        R(2, 7, 12, 8, '#8a5a2b'); R(1, 8, 2, 5, '#7d9a4a'); R(13, 8, 2, 5, '#7d9a4a'); R(4, 15, 3, 1, K); R(9, 15, 3, 1, K);
+        R(-1, 3, 2, 10, '#6b4423');
+        break;
+      default:
+        R(2, -1, 2, 3, '#e0b43a'); R(12, -1, 2, 3, '#e0b43a');
+        R(3, 1, 10, 6, '#3a2466'); R(5, 3, 2, 2, '#ff4d4d'); R(9, 3, 2, 2, '#ff4d4d'); R(5, 5, 6, 1, '#f2b84b');
+        R(2, 7, 12, 8, '#2b1b4d'); R(0, 7, 2, 6, '#3a2466'); R(14, 7, 2, 6, '#3a2466'); R(6, 9, 4, 3, '#a96cff');
+        R(4, 15, 3, 3, '#3a2466'); R(9, 15, 3, 3, '#3a2466');
+    }
+  }
+  function drawBg(bg) {
+    var g = cx.createLinearGradient(0, 0, 0, G), x, h, i;
+    g.addColorStop(0, bg.s0); g.addColorStop(1, bg.s1);
+    cx.fillStyle = g; cx.fillRect(0, 0, W, H);
+    cx.fillStyle = '#f3e8c9';
+    stars.forEach(function (s) { cx.fillRect(s[0], s[1], s[2], s[2]); });
+    if (bg.deco === 'hills') { cx.fillRect(404, 22, 28, 28); cx.fillStyle = bg.s1; cx.fillRect(412, 22, 20, 8); }
+    cx.fillStyle = bg.hill;
+    if (bg.deco === 'hills') {
+      for (x = 0; x < W; x += 6) { h = 24 + 14 * Math.sin(x / 55) + 8 * Math.sin(x / 23); cx.fillRect(x, G - h, 6, h); }
+    } else if (bg.deco === 'pillars') {
+      for (x = 14; x < W; x += 76) { cx.fillRect(x, G - 96, 26, 96); cx.fillRect(x - 4, G - 104, 34, 8); cx.fillStyle = bg.s1; cx.fillRect(x + 9, G - 76, 8, 16); cx.fillStyle = bg.hill; }
+    } else if (bg.deco === 'shelves') {
+      var BC = ['#8b3a3a', '#3a5a8b', '#3a8b5a', '#8b7a3a', '#6a3a8b'];
+      cx.fillRect(0, G - 88, W, 88);
+      for (i = 0; i < 4; i++) for (x = 0; x < W; x += 7) { cx.fillStyle = BC[(x / 7 + i * 3) % 5 | 0]; cx.fillRect(x + 1, G - 84 + i * 21, 5, 16 - ((x * 7 + i * 5) % 4)); }
+    } else if (bg.deco === 'tower') {
+      for (x = 0; x < W; x += 40) { h = 44 + ((x / 40 * 7) % 5) * 12; cx.fillRect(x, G - h, 36, h); cx.fillStyle = bg.edge; for (i = 0; i < h; i += 14) cx.fillRect(x, G - h + i, 36, 2); cx.fillStyle = bg.hill; }
+    } else {
+      for (x = 0; x < W; x += 32) { h = 40 + ((x / 32 * 5) % 3) * 22; cx.beginPath(); cx.moveTo(x, G); cx.lineTo(x + 16, G - h); cx.lineTo(x + 32, G); cx.fill(); }
+    }
+    cx.fillStyle = bg.gnd; cx.fillRect(0, G, W, H - G);
+    cx.fillStyle = bg.edge; cx.fillRect(0, G, W, 3);
+  }
+  function draw(now) {
+    drawBg(run ? run.realm.bg : REALMS[save.last || 0].bg);
+    var hu = 4, hA = (now - an.hAtk) / 450, lunge = hA >= 0 && hA < 1 ? Math.sin(hA * Math.PI) * 130 : 0;
+    var hHit = now - an.hHit, hf = hHit >= 0 && hHit < 260 && Math.floor(hHit / 65) % 2 === 0;
+    var shake = hHit >= 0 && hHit < 260 ? (Math.floor(hHit / 40) % 2 ? -3 : 3) : 0;
+    var eAtkP = (now - an.eAtk) / 450, eL = eAtkP >= 0 && eAtkP < 1 ? Math.sin(eAtkP * Math.PI) * 150 : 0;
+    var eHitT = now - an.eHit, ef = eHitT >= 0 && eHitT < 260 && Math.floor(eHitT / 65) % 2 === 0;
+
+    cx.globalAlpha = run && run.hp <= 0 ? 0.45 : 1;
+    drawHero(52 + lunge + shake, G - 20 * hu, hu, now, hf);
+    cx.globalAlpha = 1;
+
+    if (scr === 'battle' && run && run.enemy) {
+      var e = run.enemy, eu = e.boss ? 5 : 4, dp = an.die && now > an.die ? Math.min(1, (now - an.die) / 900) : 0;
+      var eh = (e.boss ? 18 : 16) * eu, ex = (e.boss ? 330 : 345) - eL + (eHitT >= 0 && eHitT < 260 ? (Math.floor(eHitT / 40) % 2 ? 3 : -3) : 0);
+      var bob = Math.sin(now / 280) * 2;
+      cx.globalAlpha = 1 - dp;
+      drawEnemy(e, ex, G - eh + bob + dp * 18, eu, now, ef);
+      cx.globalAlpha = 1;
+    }
+    cx.font = '700 22px "Pixelify Sans", monospace'; cx.textAlign = 'center';
+    floats = floats.filter(function (fl) { return now - fl.t0 < 900; });
+    floats.forEach(function (fl) {
+      var t = now - fl.t0; if (t < 0) return;
+      cx.globalAlpha = 1 - t / 900; cx.fillStyle = '#10142a'; cx.fillText(fl.t, fl.x + 2, fl.y - t / 14 + 2);
+      cx.fillStyle = fl.c; cx.fillText(fl.t, fl.x, fl.y - t / 14);
+    });
+    cx.globalAlpha = 1;
+  }
+  function frame(now) {
+    draw(now);
+    if (phase === 'ask' && q) {
+      var rem = q.limit - (performance.now() - t0) / 1000, fr = Math.max(0, rem / q.limit);
+      $('tfill').style.width = (fr * 100) + '%';
+      $('timer').className = 'timer' + (fr < 0.3 ? ' low' : fr < 0.6 ? ' mid' : '');
+      $('qtime').textContent = Math.max(0, Math.ceil(rem));
+      if (rem <= 0) submit(true);
+    }
+    requestAnimationFrame(frame);
+  }
+
+  renderMenu(); show('menu'); updHud();
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
