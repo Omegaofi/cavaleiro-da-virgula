@@ -302,10 +302,11 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
 
     <section class="panel" id="sc-cori" hidden>
       <h2>Cofre de coringas</h2>
-      <p class="lead">Repertórios que servem para vários temas. Para cada um: estude, lembre de memória e depois aplique em um parágrafo. Você pode ter no máximo 2 coringas lembrados e ainda não aplicados. Um coringa aplicado volta para revisão depois de alguns dias.</p>
+      <p class="lead">Coringas para a introdução, o desenvolvimento e a conclusão: repertórios e técnicas que servem para vários temas. Para cada um: estude, lembre de memória e depois aplique em um parágrafo. Você pode ter no máximo 2 coringas lembrados e ainda não aplicados. Um coringa aplicado volta para revisão depois de alguns dias.</p>
       <div id="coribrowse">
         <dl class="facts" id="coriprog"></dl>
         <label class="fld">Filtrar por tema <select id="coritema"></select></label>
+        <label class="fld">Filtrar por parte <select id="coriparte"><option value="">Tudo</option><option value="rep">Repertórios</option><option value="intro">Introdução</option><option value="dev">Desenvolvimento</option><option value="conc">Conclusão</option></select></label>
         <div class="realms" id="corilist"></div>
       </div>
       <div id="coriview" hidden></div>
@@ -894,7 +895,109 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
       explica: 'Os institutos oferecem educação profissional e tecnológica em vários níveis e têm entre seus objetivos o desenvolvimento socioeconômico local e regional.',
       conecta: { 5: 'Dessa forma, instituições como o IFSul aproximam o jovem do mercado de trabalho e impulsionam o desenvolvimento de cada região.',
                  3: 'Nesse sentido, a expansão dos institutos pelo interior leva formação tecnológica ao interior e reduz a desigualdade de acesso entre as regiões.' },
-      palavras: ['11.892', 'Institutos Federais'], ideia: ['institutos', 'profissional', 'tecnológic', 'desenvolvimento'] }
+      palavras: ['11.892', 'Institutos Federais'], ideia: ['institutos', 'profissional', 'tecnológic', 'desenvolvimento'] },
+    /* ---------- técnicas coringa por parte da redação (conecta: tema -> parágrafo-modelo completo) ---------- */
+    { id: 't-intro-hist', tipo: 'Técnica', parte: 'intro', titulo: 'Abertura histórica', fonte: 'Introdução',
+      apresenta: 'Comece situando o tema no tempo, com expressões como “Desde”, “Ao longo dos anos” ou “Com o advento de”.',
+      explica: 'Isso mostra que o problema tem origem e evolução, e prepara a tese como consequência natural.',
+      conecta: { 4: 'Desde a popularização dos smartphones, as telas ocupam grande parte do dia dos brasileiros. Nos últimos anos, o hábito de rolar o celular sem pausa também invadiu os momentos de estudo. Diante disso, o vício em telas reduz a concentração dos jovens e prejudica o aprendizado.',
+                 1: 'Desde o surgimento das redes sociais, qualquer pessoa pode publicar informações para milhares de leitores. Ao longo dos últimos anos, esse alcance fez crescer a circulação de boatos e de notícias falsas. Diante disso, o combate à desinformação no Brasil exige educação midiática e checagem de fontes.' },
+      palavras: ['Desde ', 'Ao longo', 'Com o advento', 'últimas décadas', 'últimos anos', 'Historicamente'], ideia: ['Diante disso', 'Nesse contexto', 'Nesse sentido', 'Dessa forma'],
+      lu: 'Situa o tema no tempo (Desde, Ao longo, Com o advento…)', du: 'Abra com Desde…, Ao longo dos anos, Nos últimos anos ou Com o advento de…',
+      li: 'Tese anunciada por conectivo', di: 'Anuncie a tese com Diante disso, Nesse contexto, Nesse sentido ou Dessa forma.' },
+    { id: 't-intro-contraste', tipo: 'Técnica', parte: 'intro', titulo: 'Abertura por contraste', fonte: 'Introdução',
+      apresenta: 'Apresente dois lados na primeira frase com “Embora”, “Apesar de” ou “Mesmo que”, e mostre o problema na frase seguinte.',
+      explica: 'O contraste cria tensão e fortalece a tese, porque mostra que o benefício não elimina o risco.',
+      conecta: { 2: 'Embora as redes sociais aproximem pessoas e ampliem a comunicação, elas também expõem os jovens a comparações constantes. Contudo, o uso sem limites dessas plataformas raramente é discutido nas escolas e nas famílias. Nesse sentido, o uso excessivo das redes prejudica a saúde mental dos adolescentes, pois aumenta a ansiedade e o isolamento.',
+                 0: 'Embora a inteligência artificial facilite a pesquisa e agilize as tarefas, ela também pode acomodar o estudante. Contudo, a escola pouco discute como usar essa tecnologia com senso crítico. Nesse contexto, o uso acrítico da IA ameaça o pensamento dos alunos, pois substitui o esforço de refletir.' },
+      palavras: ['Embora', 'Apesar de', 'Mesmo que', 'Ainda que', 'Por um lado'], ideia: ['Contudo', 'Entretanto', 'No entanto', 'Todavia', 'Por outro lado', 'Porém'],
+      lu: 'Abre com contraste (Embora, Apesar de, Mesmo que…)', du: 'Abra com Embora…, Apesar de… ou Mesmo que….',
+      li: 'Segunda ideia com contraste (Contudo, Entretanto…)', di: 'Mostre o problema com Contudo, Entretanto, No entanto ou Por outro lado.' },
+    { id: 't-intro-dado', tipo: 'Técnica', parte: 'intro', titulo: 'Abertura por dado', fonte: 'Introdução',
+      apresenta: 'Cite uma pesquisa, órgão ou dado logo no início, com “Segundo” ou “De acordo com”.',
+      explica: 'Um dado verificável dá credibilidade ao texto e mostra que o problema é real, e não só uma opinião.',
+      conecta: { 3: 'Segundo o IBGE, milhões de brasileiros acessam a internet principalmente pelo celular, e não pelo computador. Esse cenário revela que o acesso à tecnologia ainda é limitado para muitas famílias. Diante disso, a desigualdade digital restringe as oportunidades de estudo e de trabalho no país.',
+                 4: 'Segundo a UNESCO, o uso de smartphones em sala pode distrair os alunos e prejudicar a aprendizagem. Esse alerta mostra que a atenção dos estudantes depende de limites ao uso de telas. Diante disso, o vício em telas reduz a concentração dos jovens e exige medidas na escola.' },
+      palavras: ['Segundo ', 'De acordo com', 'Conforme '], ideia: ['milhões', 'milhares', 'bilhões', '%', 'dados', 'pesquisa', 'relatório', 'estudo', 'alerta', 'levantamento'],
+      lu: 'Cita uma fonte (Segundo, De acordo com, Conforme)', du: 'Abra com Segundo o IBGE,… ou De acordo com….',
+      li: 'Menciona o dado ou a pesquisa', di: 'Diga o que o dado mostra: milhões, pesquisa, relatório, estudo…' },
+    { id: 't-intro-tese', tipo: 'Técnica', parte: 'intro', titulo: 'Tese com justificativa', fonte: 'Introdução',
+      apresenta: 'Termine a introdução anunciando a tese e o motivo que o texto vai desenvolver, com “pois” ou “já que”.',
+      explica: 'Isso organiza o texto: cada motivo anunciado vira um parágrafo de desenvolvimento.',
+      conecta: { 5: 'Nos últimos anos, o mercado de trabalho passou a exigir profissionais com formação prática e atualizada. Mesmo assim, a educação técnica ainda é pouco divulgada entre os jovens brasileiros. Diante disso, é preciso valorizar o ensino técnico, pois ele qualifica o estudante e aproxima a escola das empresas.',
+                 1: 'As redes sociais mudaram a forma como os brasileiros recebem notícias. Em poucos minutos, um boato pode alcançar milhares de pessoas antes de qualquer verificação. Dessa forma, o combate às fake news exige educação midiática, pois o cidadão precisa aprender a checar as fontes.' },
+      palavras: ['pois', 'já que', 'uma vez que', 'visto que', 'porque'], ideia: [],
+      lu: 'Tese com justificativa (pois, já que, uma vez que…)', du: 'Na última frase, justifique a tese com pois, já que ou uma vez que.' },
+    { id: 't-dev-causa', tipo: 'Técnica', parte: 'dev', titulo: 'Causa e consequência', fonte: 'Desenvolvimento',
+      apresenta: 'Mostre por que algo acontece e o que resulta disso, com “pois”, “já que” e “o que gera”.',
+      explica: 'A cadeia causa e consequência prova o argumento, em vez de apenas afirmá-lo.',
+      conecta: { 4: 'Em primeiro lugar, o uso constante do celular fragmenta a atenção dos estudantes. A cada notificação, o estudante interrompe a tarefa, pois precisa mudar de foco, o que provoca cansaço e erros. Segundo a UNESCO, o uso de smartphones em sala pode distrair os alunos e prejudicar a aprendizagem. Dessa forma, as telas reduzem a concentração e o rendimento escolar dos jovens.',
+                 3: 'Em primeiro lugar, a falta de internet limita o estudo dos alunos de baixa renda, pois sem conexão estável eles não conseguem pesquisar nem entregar tarefas, o que gera atraso e desânimo. De acordo com o IBGE, o celular é o principal meio de acesso à internet no país, e ele nem sempre atende às tarefas escolares. Nesse sentido, a desigualdade digital amplia as diferenças educacionais entre os estudantes.' },
+      palavras: ['pois', 'porque', 'já que', 'uma vez que', 'visto que', 'devido a', 'em razão d', 'por causa d'], ideia: ['consequentemente', 'por isso', 'como resultado', 'resultando', 'o que gera', 'o que causa', 'o que leva', 'o que provoca', 'o que agrava'],
+      lu: 'Explica a causa (pois, já que, devido a…)', du: 'Explique a causa com pois, já que, devido a ou por causa de.',
+      li: 'Mostra a consequência (por isso, o que gera…)', di: 'Mostre o resultado com por isso, o que gera, o que provoca ou como resultado.' },
+    { id: 't-dev-analogia', tipo: 'Técnica', parte: 'dev', titulo: 'Analogia com o repertório', fonte: 'Desenvolvimento',
+      apresenta: 'Compare a obra com o mundo real usando “assim como”, “da mesma forma” ou “analogamente”.',
+      explica: 'A comparação mostra que você entendeu a obra e a liga ao tema, que é o que a banca espera.',
+      conecta: { 0: 'Em segundo lugar, o uso acrítico da inteligência artificial pode tornar o estudante dependente. No filme Wall-E, lançado em 2008, os humanos deixam de decidir por conta própria, pois as máquinas resolvem tudo por eles. Assim como na ficção, o aluno que entrega todas as tarefas à IA perde a autonomia. Dessa forma, a escola precisa ensinar o uso crítico dessa tecnologia.',
+                 1: 'Primeiramente, as notícias falsas se espalham porque despertam emoções fortes e curiosidade. No livro 1984, de George Orwell, o Estado altera os fatos para que a população aceite a versão oficial. Da mesma forma, boatos nas redes sociais moldam a opinião de quem não verifica a fonte. Nesse sentido, a checagem de informações protege o cidadão da manipulação.' },
+      palavras: ['assim como', 'da mesma forma', 'do mesmo modo', 'analogamente', 'tal como', 'à semelhança de', 'de modo semelhante'], ideia: [],
+      lu: 'Compara a obra com a realidade (assim como, da mesma forma…)', du: 'Compare com assim como, da mesma forma, do mesmo modo ou analogamente.' },
+    { id: 't-dev-contra', tipo: 'Técnica', parte: 'dev', titulo: 'Contra-argumento e refutação', fonte: 'Desenvolvimento',
+      apresenta: 'Apresente a ideia contrária (“Alguns argumentam que…”) e responda a ela com “No entanto” ou “Entretanto”.',
+      explica: 'Mostrar que você conhece o outro lado e o refuta deixa o argumento mais maduro.',
+      conecta: { 4: 'Em primeiro lugar, o uso de telas prejudica a concentração dos jovens. Alguns argumentam que o celular ajuda nos estudos, pois facilita a pesquisa. No entanto, as notificações constantes desviam a atenção e reduzem o tempo de leitura. Segundo a UNESCO, o uso de smartphones em sala pode distrair os alunos. Dessa forma, o excesso de telas compromete o aprendizado.',
+                 5: 'Em primeiro lugar, o ensino técnico amplia as chances de inserção no mercado de trabalho. Há quem diga que apenas o ensino superior garante um bom emprego. Entretanto, os cursos técnicos formam profissionais rapidamente e atendem a demandas locais. A Lei 11.892, de 2008, criou os Institutos Federais para oferecer formação profissional e tecnológica. Nesse sentido, a educação técnica merece valorização.' },
+      palavras: ['alguns argumentam', 'alguns podem argumentar', 'há quem', 'pode-se argumentar', 'alguns defendem', 'alguns afirmam', 'muitos argumentam'], ideia: ['entretanto', 'no entanto', 'contudo', 'todavia', 'porém'],
+      lu: 'Apresenta a ideia contrária (Alguns argumentam, Há quem…)', du: 'Apresente o outro lado com Alguns argumentam que… ou Há quem diga que….',
+      li: 'Refuta com Entretanto, No entanto, Contudo…', di: 'Responda à ideia contrária com Entretanto, No entanto ou Contudo.' },
+    { id: 't-dev-autoridade', tipo: 'Técnica', parte: 'dev', titulo: 'Argumento de autoridade', fonte: 'Desenvolvimento',
+      apresenta: 'Apoie o argumento em um pensador, pesquisador ou instituição, com “Segundo” ou “De acordo com”.',
+      explica: 'A voz de um especialista dá peso ao argumento, desde que você explique o que ele diz.',
+      conecta: { 2: 'Em primeiro lugar, a exposição constante nas redes sociais intensifica a comparação entre os jovens. De acordo com o filósofo Byung-Chul Han, vivemos em uma sociedade do desempenho, em que as pessoas se cobram produtividade o tempo todo. Essa autoexploração leva ao esgotamento e a doenças como a depressão. Dessa forma, a cobrança por desempenho nas redes afeta a saúde mental dos adolescentes.',
+                 0: 'Em primeiro lugar, a escola precisa estimular perguntas, e não apenas entregar respostas prontas. Para o educador Paulo Freire, autor de Pedagogia do Oprimido, a educação bancária reduz o aluno a mero receptor de informações. Segundo essa visão, o ensino deve formar o pensamento crítico. Nesse sentido, a inteligência artificial deve apoiar a reflexão do estudante, e não substituí-la.' },
+      palavras: ['Segundo ', 'De acordo com', 'Conforme ', 'Para o filósofo', 'Para o sociólogo', 'Para o pesquisador', 'Para o educador'], ideia: ['filósofo', 'sociólogo', 'pesquisador', 'especialista', 'educador', 'estudo', 'autor', 'relatório', 'pesquisa'],
+      lu: 'Cita uma autoridade (Segundo, De acordo com, Para o filósofo…)', du: 'Cite com Segundo…, De acordo com… ou Para o filósofo….',
+      li: 'Nomeia quem fala (filósofo, pesquisador, autor…)', di: 'Diga quem é a autoridade: filósofo, pesquisador, autor, especialista…' },
+    { id: 't-conc-cinco', tipo: 'Técnica', parte: 'conc', titulo: 'Proposta nos 5 elementos', fonte: 'Conclusão',
+      apresenta: 'Feche com agente + ação + meio + finalidade + detalhamento, nessa ordem, em duas ou três frases.',
+      explica: 'Uma proposta completa vale mais pontos na C5, e o detalhamento mostra que a ideia é viável.',
+      conecta: { 2: 'Portanto, o uso desequilibrado das redes sociais compromete a saúde mental dos jovens. Logo, o Ministério da Saúde, em parceria com as escolas públicas, deve ampliar o atendimento psicológico gratuito, por meio da contratação de psicólogos e de rodas de conversa, a fim de reduzir a ansiedade e o isolamento. O atendimento ocorrerá no turno escolar, com sigilo garantido e acompanhamento das famílias.',
+                 3: 'Portanto, a desigualdade digital limita as oportunidades educacionais no Brasil. Dessa forma, o Ministério das Comunicações, em parceria com as prefeituras, deve ampliar o acesso à internet nas escolas, por meio da instalação de redes de fibra óptica e da distribuição de computadores, a fim de garantir as mesmas oportunidades de aprendizado. A prioridade será dada às cidades do interior com menor índice de conectividade.' },
+      palavras: ['por meio', 'mediante', 'através d', 'com o uso d'], ideia: ['a fim de', 'para que', 'com o objetivo de', 'com o intuito de', 'de modo a'],
+      lu: 'Tem meio (por meio de, mediante)', du: 'Diga como: por meio de… ou mediante….',
+      li: 'Tem finalidade (a fim de, para que…)', di: 'Diga para quê: a fim de…, para que… ou com o objetivo de….' },
+    { id: 't-conc-agente', tipo: 'Técnica', parte: 'conc', titulo: 'Agente específico e parceria', fonte: 'Conclusão',
+      apresenta: 'Nomeie um órgão real e, se possível, uma parceria: “o Ministério da Educação, em parceria com as escolas”.',
+      explica: '“O governo” e “a sociedade” são genéricos e custam pontos na C5. O agente específico mostra quem vai agir.',
+      conecta: { 1: 'Em suma, as notícias falsas ameaçam a democracia e exigem uma resposta coordenada. Dessa maneira, o Ministério da Educação, em parceria com agências de checagem, deve ensinar a verificação de fontes nas escolas, por meio de aulas práticas de análise de notícias, a fim de reduzir o compartilhamento de boatos. As aulas usarão casos reais e terão a participação de jornalistas convidados.',
+                 5: 'Em síntese, a valorização do ensino técnico amplia as oportunidades dos jovens no mercado de trabalho. Assim, o Ministério da Educação, em parceria com os institutos federais e as empresas locais, deve ampliar as vagas dos cursos técnicos, por meio de feiras de profissões nas escolas e de bolsas de estágio, a fim de aproximar os estudantes do mercado. As feiras ocorrerão a cada semestre, com ex-alunos apresentando suas trajetórias.' },
+      palavras: ['Ministério', 'Secretaria', 'Congresso', 'Agência', 'Conselho', 'Instituto', 'Prefeitura', 'Defensoria', 'Universidade', 'Tribunal'], ideia: ['em parceria com', 'em conjunto com', 'com o apoio d', 'com apoio d'],
+      lu: 'Nomeia um agente específico (Ministério, Secretaria, Prefeitura…)', du: 'Troque “o governo” por um órgão, como o Ministério da Educação.',
+      li: 'Indica parceria (em parceria com…)', di: 'Acrescente em parceria com… e diga quem ajuda o agente.' },
+    { id: 't-conc-detalhe', tipo: 'Técnica', parte: 'conc', titulo: 'Detalhamento forte', fonte: 'Conclusão',
+      apresenta: 'Na última frase, diga quando, quem executa e como será avaliado: “serão quinzenais, conduzidas por professores e avaliadas a cada semestre”.',
+      explica: 'Prazo, responsáveis e avaliação mostram que a proposta é viável, e é isso que o detalhamento precisa provar.',
+      conecta: { 0: 'Portanto, o uso acrítico da inteligência artificial ameaça o pensamento dos estudantes. Logo, o Ministério da Educação, em parceria com as escolas, deve incluir aulas sobre o uso crítico da IA, por meio de oficinas, a fim de formar alunos capazes de questionar as respostas das máquinas. As oficinas serão quinzenais, conduzidas por professores capacitados e avaliadas a cada semestre.',
+                 4: 'Em suma, o excesso de telas reduz a concentração e o hábito de leitura dos jovens. Dessa forma, o Ministério da Educação, em parceria com as famílias, deve implementar momentos de desconexão nas escolas, por meio de intervalos sem celular e de palestras sobre o uso saudável da tecnologia, a fim de recuperar a atenção dos estudantes. As palestras serão mensais, conduzidas por psicólogos e avaliadas por pesquisas com os alunos.' },
+      palavras: ['semanais', 'mensais', 'quinzenais', 'semestre', 'semestral', 'anual', 'bimestre', 'diariamente', 'prazo', 'a cada'], ideia: ['professores', 'psicólogos', 'jornalistas', 'especialistas', 'equipe', 'profissionais', 'avaliad', 'monitorad', 'pesquisa'],
+      lu: 'Diz a periodicidade (semanais, a cada semestre, mensais…)', du: 'Diga quando: quinzenais, mensais, a cada semestre ou em um prazo.',
+      li: 'Diz quem executa ou como avalia (professores, avaliadas…)', di: 'Diga quem executa (professores, psicólogos) ou como será avaliado.' },
+    { id: 't-conc-finalidade', tipo: 'Técnica', parte: 'conc', titulo: 'Finalidade com resultado', fonte: 'Conclusão',
+      apresenta: 'Use um verbo de resultado depois de “a fim de” ou “com o objetivo de”: reduzir, ampliar, garantir, aumentar.',
+      explica: 'Uma finalidade com resultado claro mostra para quê a ação serve, e não só o que será feito.',
+      conecta: { 3: 'Em conclusão, o acesso desigual à internet limita o aprendizado de milhões de estudantes. Assim, o Ministério da Educação, em parceria com as prefeituras, deve distribuir computadores às escolas públicas, mediante programas de empréstimo, com o objetivo de reduzir a diferença de acesso entre os alunos. O programa começará pelas cidades do interior e será avaliado a cada ano.',
+                 4: 'Portanto, o vício em telas reduz a concentração dos jovens. Assim, o Ministério da Educação, em parceria com as escolas, deve limitar o uso de celulares nas salas, por meio de regras claras e de atividades sem tela, com o objetivo de aumentar a atenção dos estudantes. As regras serão revistas a cada semestre, com a participação de professores e famílias.' },
+      palavras: ['a fim de', 'para que', 'com o objetivo de', 'com o intuito de', 'de modo a'], ideia: ['reduzir', 'ampliar', 'garantir', 'diminuir', 'aumentar', 'fortalecer', 'combater', 'promover'],
+      lu: 'Tem finalidade (a fim de, com o objetivo de…)', du: 'Diga para quê: a fim de… ou com o objetivo de….',
+      li: 'Usa verbo de resultado (reduzir, ampliar, garantir…)', di: 'Depois da finalidade, use reduzir, ampliar, garantir, aumentar ou combater.' },
+    { id: 't-conc-circular', tipo: 'Técnica', parte: 'conc', titulo: 'Fechamento circular', fonte: 'Conclusão',
+      apresenta: 'Retome na conclusão a obra ou o dado da introdução, com “assim como em” ou “como em”.',
+      explica: 'Voltar ao repertório inicial dá unidade ao texto e mostra que a conclusão responde à abertura.',
+      conecta: { 1: 'Portanto, as fake news ameaçam a democracia e a capacidade de o cidadão discernir a verdade. Assim como no livro 1984, em que o Estado reescreve os fatos, a desinformação distorce a realidade. Logo, o Ministério da Educação, em parceria com agências de checagem, deve ensinar a verificação de fontes nas escolas, por meio de aulas práticas, a fim de formar leitores críticos. As aulas ocorrerão a cada semestre, com a participação de jornalistas.',
+                 0: 'Portanto, o uso acrítico da inteligência artificial ameaça o senso crítico dos estudantes. Como em Matrix, em que as pessoas aceitam uma realidade falsa, o aluno pode aceitar respostas prontas sem questionar. Logo, o Ministério da Educação, em parceria com as escolas, deve criar oficinas de uso crítico da IA, por meio de aulas quinzenais, a fim de formar alunos autônomos. As aulas serão conduzidas por professores capacitados.' },
+      palavras: ['assim como', 'tal como', 'à semelhança d', 'como em', 'como no', 'como na'], ideia: [],
+      lu: 'Retoma o repertório da introdução (como em, assim como…)', du: 'Retome a obra ou o dado da introdução com Assim como em… ou Como em….' }
   ];
   /* DATA END */
 
@@ -1831,8 +1934,8 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
   var DAY = 864e5;
   var escRe = function (s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); };
   function prepCori(c) {
-    c.reg = new RegExp('(^|[^A-Za-zÀ-ú0-9])(' + c.palavras.map(escRe).join('|') + ')(?![A-Za-zÀ-ú0-9])', 'i');
-    c.idRe = new RegExp(c.ideia.map(escRe).join('|'), 'i');
+    c.reg = c.parte ? new RegExp(c.palavras.map(escRe).join('|'), 'i') : new RegExp('(^|[^A-Za-zÀ-ú0-9])(' + c.palavras.map(escRe).join('|') + ')(?![A-Za-zÀ-ú0-9])', 'i');
+    c.idRe = c.ideia.length ? new RegExp(c.ideia.map(escRe).join('|'), 'i') : null;
     c.temas = Object.keys(c.conecta).map(Number);
     return c;
   }
@@ -1859,7 +1962,7 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
     var all = coriAll(), tema = +$('coritema').value, done = 0, rev = 0;
     all.forEach(function (c) { var st = coriStatus(c); if (st === 'aplicado') done++; if (st === 'revisar') rev++; });
     $('coriprog').innerHTML = '<div><dt>Aplicados</dt><dd>' + done + '/' + all.length + '</dd></div><div><dt>Lembrados sem aplicar</dt><dd>' + coriPending() + '/2</dd></div><div><dt>Para revisar</dt><dd>' + rev + '</dd></div>';
-    var list = all.filter(function (c) { return tema < 0 || c.temas.indexOf(tema) >= 0; });
+    var pt = $('coriparte').value, list = all.filter(function (c) { return (tema < 0 || c.temas.indexOf(tema) >= 0) && (!pt || (pt === 'rep' ? !c.parte : c.parte === pt)); });
     $('corilist').innerHTML = list.map(function (c) {
       var st = coriStatus(c), lock = coriLocked(c);
       return '<button type="button" class="realm" data-c="' + esc(c.id) + '"' + (lock ? ' aria-disabled="true"' : '') + '><span class="rt">' + esc(c.titulo) + '</span><span class="rd">' + esc(c.tipo) + ' · ' + esc(c.fonte) + '</span><span class="rb">' +
@@ -1880,12 +1983,13 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
   function renderCoriView() {
     var c = coriCard(cv.id), el = $('coriview'), h = '';
     if (!c) { cv = null; renderCori(); return; }
+    var tec = !!c.parte, L = tec ? ['1) Como funciona:', '2) Por que melhora:', '3) Exemplo no tema:'] : ['1) Apresenta:', '2) Explica:', '3) Conecta com o tema:'];
     if (cv.step === 'study') {
       h = '<h3>' + esc(c.titulo) + '</h3><p class="hint">' + esc(c.tipo) + ' · ' + esc(c.fonte) + '</p>' +
-        '<div class="scroll plain"><p><b>1) Apresenta:</b> ' + esc(c.apresenta) + '</p><p><b>2) Explica:</b> ' + esc(c.explica) + '</p>' +
-        '<p><b>3) Conecta com o tema:</b> ' + esc(c.conecta[cv.tema]) + '</p></div>' + coriTemaSel(c, cv.tema, 'coritsel') +
+        '<div class="scroll plain"><p><b>' + L[0] + '</b> ' + esc(c.apresenta) + '</p><p><b>' + L[1] + '</b> ' + esc(c.explica) + '</p>' +
+        '<p><b>' + L[2] + '</b> ' + esc(c.conecta[cv.tema]) + '</p></div>' + coriTemaSel(c, cv.tema, 'coritsel') +
         (c.aviso ? '<p class="weak"><b>Cuidado:</b> ' + esc(c.aviso) + '</p>' : '') +
-        '<p class="hint">Leia em voz alta duas vezes e tente guardar: quem criou, quando e o que acontece. Depois faça o teste sem olhar.</p>' +
+        '<p class="hint">' + (tec ? 'Leia o exemplo duas vezes e repare onde a técnica aparece. Depois faça o teste sem olhar.' : 'Leia em voz alta duas vezes e tente guardar: quem criou, quando e o que acontece. Depois faça o teste sem olhar.') + '</p>' +
         '<div class="actions"><button class="btn" id="cori-test" type="button">Já estudei, me testar</button><button class="btn ghost" id="cori-close" type="button">Voltar à lista</button></div>';
     } else if (cv.step === 'quiz') {
       var z = cv.qz, q = z.qs[z.i];
@@ -1907,9 +2011,9 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
         (cv.pass ? '' : '<button class="btn" id="cori-restudy" type="button">Estudar de novo</button>') +
         '<button class="btn ghost" id="cori-close" type="button">Voltar à lista</button></div>';
     } else {
-      h = '<h3>Aplique “' + esc(c.titulo) + '” em um parágrafo</h3>' +
-        '<p class="hint">Escreva um Desenvolvimento (D1): tópico frasal com conectivo, explicação, o coringa explicado e a ligação com o tema na última frase. Precisa de 75% do checklist e das duas linhas do coringa.</p>' +
-        coriTemaSel(c, cv.tema, 'coriasel') + '<p class="weak"><b>Modelo da última frase:</b> ' + esc(c.conecta[cv.tema]) + '</p>' +
+      h = '<h3>Aplique ' + (tec ? 'a técnica ' : '') + '“' + esc(c.titulo) + '” em um parágrafo</h3>' +
+        '<p class="hint">' + (tec ? 'Escreva ' + (c.parte === 'conc' ? 'a Conclusão' : c.parte === 'intro' ? 'a Introdução' : 'um Desenvolvimento (D1)') + ' usando esta técnica. Precisa de 75% do checklist e das linhas da técnica.' : 'Escreva um Desenvolvimento (D1): tópico frasal com conectivo, explicação, o coringa explicado e a ligação com o tema na última frase. Precisa de 75% do checklist e das duas linhas do coringa.') + '</p>' +
+        coriTemaSel(c, cv.tema, 'coriasel') + '<p class="weak"><b>' + (tec ? 'Exemplo completo:' : 'Modelo da última frase:') + '</b> ' + esc(c.conecta[cv.tema]) + '</p>' +
         '<textarea class="write" id="coriw" spellcheck="true" aria-label="Seu parágrafo" placeholder="Escreva o parágrafo aqui, sem linha em branco.">' + esc(cv.draft || '') + '</textarea>' +
         '<p class="hint" id="coriwcount"></p><ul class="check" id="coriwc"></ul>' +
         '<div class="actions"><button class="btn" id="cori-done" type="button">Concluir aplicação</button><button class="btn ghost" id="cori-copy" type="button">Copiar para o Claude corrigir</button><button class="btn ghost" id="cori-study" type="button">Rever o card</button></div>' +
@@ -1927,6 +2031,8 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
     renderCoriView();
   }
   function startCoriQuiz() {
+    var c0 = coriCard(cv.id);
+    if (c0.parte) { startTecQuiz(c0); return; }
     var c = coriCard(cv.id), others = shuffle(coriAll().filter(function (x) { return x.id !== c.id; })), uniq = function (a, v) { return a.indexOf(v) < 0 ? a.concat([v]) : a; };
     var fo = others.map(function (x) { return x.fonte; }).filter(function (f) { return f !== c.fonte; }).reduce(uniq, []).slice(0, 3);
     var eo = others.map(function (x) { return x.explica; }).slice(0, 3);
@@ -1935,6 +2041,16 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
       { t: 'c', p: 'Quem criou ou publicou “' + c.titulo + '”, e quando?', opts: shuffle([c.fonte].concat(fo)), ok: c.fonte },
       { t: 'c', p: 'O que acontece ou o que defende “' + c.titulo + '”?', opts: shuffle([c.explica].concat(eo)), ok: c.explica },
       { t: 't', p: 'Que obra, lei ou pesquisa é esta? Digite o nome ou o autor.', ctx: masked }
+    ] };
+    cv.step = 'quiz'; renderCoriView();
+  }
+  function startTecQuiz(c) {
+    var tecs = shuffle(coriAll().filter(function (x) { return x.parte && x.id !== c.id; })), ft = c.temas[0];
+    var dist = tecs.filter(function (x) { return x.parte !== c.parte; }).concat(tecs.filter(function (x) { return x.parte === c.parte; })).slice(0, 3);
+    cv.qz = { i: 0, sel: null, answered: false, ok: [], typed: '', last: null, qs: [
+      { t: 'c', p: 'Em que parte da redação a técnica “' + c.titulo + '” é usada?', opts: ['intro', 'dev', 'conc'].map(function (k) { return PARTS[k]; }), ok: PARTS[c.parte] },
+      { t: 'c', p: 'Como funciona a técnica “' + c.titulo + '”?', opts: shuffle([c.apresenta].concat(tecs.slice(0, 3).map(function (x) { return x.apresenta; }))), ok: c.apresenta },
+      { t: 'c', p: 'Qual técnica este trecho usa?', ctx: c.conecta[ft], opts: shuffle([c.titulo].concat(dist.map(function (x) { return x.titulo; }))), ok: c.titulo }
     ] };
     cv.step = 'quiz'; renderCoriView();
   }
@@ -1964,9 +2080,9 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
     cv.step = 'result'; renderCoriView(); updHud();
   }
   function evalCori(text, c, tema) {
-    var r = evalPart(text, 'dev', tema), rows = r.rows.slice(), usa = c.reg.test(text), idea = c.idRe.test(text);
-    rows.push({ key: 'usa', label: 'Cita o coringa (' + c.titulo + ')', cat: 'Repertório', ok: usa, d: usa ? 'Ok.' : 'Cite pelo nome: ' + c.palavras[0] + '.' });
-    rows.push({ key: 'ideia', label: 'Explica a ideia central do coringa', cat: 'Repertório', ok: idea, d: idea ? 'Ok.' : 'Explique com palavras como: ' + c.ideia.slice(0, 3).join(', ') + '.' });
+    var r = evalPart(text, c.parte || 'dev', tema), rows = r.rows.slice(), usa = c.reg.test(text), idea = c.idRe ? c.idRe.test(text) : true, cat = c.parte ? 'Estrutura dos parágrafos' : 'Repertório';
+    rows.push({ key: 'usa', label: c.lu || 'Cita o coringa (' + c.titulo + ')', cat: cat, ok: usa, d: usa ? 'Ok.' : (c.du || 'Cite pelo nome: ' + c.palavras[0] + '.') });
+    if (c.idRe) rows.push({ key: 'ideia', label: c.li || 'Explica a ideia central do coringa', cat: cat, ok: idea, d: idea ? 'Ok.' : (c.di || 'Explique com palavras como: ' + c.ideia.slice(0, 3).join(', ') + '.') });
     var passed = rows.filter(function (x) { return x.ok; }).length, score = passed / rows.length;
     return { rows: rows, passed: passed, total: rows.length, score: score, has: r.has, ok: r.has && score >= 0.75 && usa && idea };
   }
@@ -2146,6 +2262,7 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
   $('mcori').addEventListener('click', openCoriScreen);
   $('coriback').addEventListener('click', toMenu);
   $('coritema').addEventListener('change', renderCori);
+  $('coriparte').addEventListener('change', renderCori);
   $('corilist').addEventListener('click', function (e) {
     var b = e.target.closest('[data-c]');
     if (b && b.getAttribute('aria-disabled') !== 'true') openCori(b.getAttribute('data-c'));
@@ -2164,7 +2281,7 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
     else if (id === 'cori-copy') {
       var tx = $('coriw').value;
       if (tx.trim().length < 30) { $('coriamsg').textContent = 'Escreva o parágrafo antes de copiar o pedido.'; return; }
-      copyText(buildPartPrompt('dev', cv.tema, tx)).then(function () { $('coriamsg').textContent = 'Pedido copiado. Cole no Claude e traga o JSON em Treino personalizado.'; }, function () { $('coriamsg').textContent = 'Não consegui copiar sozinho.'; });
+      copyText(buildPartPrompt(coriCard(cv.id).parte || 'dev', cv.tema, tx)).then(function () { $('coriamsg').textContent = 'Pedido copiado. Cole no Claude e traga o JSON em Treino personalizado.'; }, function () { $('coriamsg').textContent = 'Não consegui copiar sozinho.'; });
     } else if (t.hasAttribute('data-qo') && cv.step === 'quiz' && !cv.qz.answered) {
       cv.qz.sel = +t.getAttribute('data-qo'); renderCoriView();
     }
