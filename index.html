@@ -186,7 +186,7 @@ details.rules p { margin: 10px 0 2px; }
 
 .fld { display: grid; gap: 6px; font: 500 15px/1 var(--f-display); color: var(--muted); }
 select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--text); background: var(--panel2); border: 2px solid var(--line); border-radius: 4px; padding: 10px 12px; max-width: 100%; }
-.write { display: block; width: 100%; box-sizing: border-box; font: 400 17px/1.6 var(--f-text); color: var(--paper-ink); background: #fbf4de; border: 2px solid #b9a770; border-radius: 6px; padding: 12px 14px; min-height: 300px; resize: vertical; }
+.write { display: block; width: 100%; box-sizing: border-box; font: 400 17px/1.6 var(--f-text); color: var(--paper-ink); background: #fbf4de; border: 2px solid #b9a770; border-radius: 6px; padding: 12px 14px; min-height: 200px; resize: vertical; }
 .write:focus-visible { outline-color: var(--gold); }
 .check { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .check li { background: var(--panel2); border-radius: 4px; padding: 10px 12px; display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; align-items: baseline; }
@@ -239,7 +239,7 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
   <main>
     <section class="panel" id="sc-menu">
       <h2>Escolha seu reino</h2>
-      <p class="lead">Cada reino treina um exercício do seu treino de redação. Vença o chefe da fase 5 para liberar o próximo reino e ganhar uma capa nova. As estrelas chegam nas fases 5, 10 e 15.</p>
+      <p class="lead">Cada reino treina um exercício do seu treino de redação. Vença o chefe da fase 5 para liberar o próximo reino e ganhar uma capa nova. As estrelas chegam nas fases 5, 10 e 15. Quando o chefe chega na metade da vida, ele abre um duelo de escrita: você escreve só um parágrafo, como a introdução, um desenvolvimento ou a conclusão.</p>
       <div class="realms" id="realms"></div>
       <fieldset class="seg" id="modeseg">
         <legend>Desafio de vírgula (vale para o Reino das Vírgulas e para o Castelo)</legend>
@@ -250,7 +250,7 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
         </div>
       </fieldset>
       <div class="actions">
-        <button class="btn" id="mwrite" type="button">Sala da redação</button>
+        <button class="btn" id="mwrite" type="button">Oficina de parágrafos</button>
         <button class="btn ghost" id="mshop" type="button">Loja e guarda-roupa</button>
       </div>
       <dl class="facts" id="mfacts"></dl>
@@ -298,11 +298,15 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
     </section>
 
     <section class="panel" id="sc-write" hidden>
-      <h2>Sala da redação (Modo 4)</h2>
-      <p class="lead">Escreva a redação completa em 4 parágrafos, confira o checklist e copie o pedido pronto para o Claude corrigir com nota de C1 a C5. Depois registre a nota para ver sua evolução.</p>
-      <label class="fld">Tema <select id="wtheme"></select></label>
-      <div class="actions"><button class="btn ghost" id="wrand" type="button">Sortear tema</button></div>
-      <textarea class="write" id="wtext" spellcheck="true" aria-label="Sua redação" placeholder="Escreva aqui. Separe os 4 parágrafos com uma linha em branco."></textarea>
+      <h2>Oficina de parágrafos</h2>
+      <p class="lead">Treine uma parte da redação por vez, sem luta. Escreva, confira o checklist e copie o pedido pronto para o Claude corrigir. O mesmo checklist vale no duelo de escrita contra os chefes.</p>
+      <div class="noterow">
+        <label class="fld">Parte <select id="wpart"></select></label>
+        <label class="fld">Tema <select id="wtheme"></select></label>
+        <button class="btn ghost" id="wrand" type="button">Sortear tema</button>
+      </div>
+      <p class="hint" id="whint"></p>
+      <textarea class="write" id="wtext" spellcheck="true" aria-label="Seu parágrafo" placeholder="Escreva aqui o parágrafo, sem linha em branco."></textarea>
       <p class="hint" id="wcount"></p>
       <ul class="check" id="wcheck"></ul>
       <div class="actions">
@@ -311,11 +315,7 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
         <button class="btn ghost" id="wback" type="button">Mapa</button>
       </div>
       <p class="hint" id="wmsg" role="status"></p>
-      <div class="noterow">
-        <label class="fld">Nota que o Claude deu (0 a 1000) <input type="number" id="wnote" min="0" max="1000" step="10" inputmode="numeric"></label>
-        <button class="btn ghost" id="wsave" type="button">Registrar nota (+60 moedas)</button>
-      </div>
-      <h3>Sua evolução</h3>
+      <h3>Melhor pontuação por parte</h3>
       <ol class="hist" id="whist"></ol>
     </section>
   </main>
@@ -639,22 +639,22 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
 
   /* ---------- reinos, itens, capas ---------- */
   var REALMS = [
-    { id: 'virgula', name: 'Floresta das Vírgulas', desc: 'Pontue frases sem vírgula: conectivo, adjunto deslocado, intercalada, mas/porém/pois.', kinds: ['comma'],
+    { id: 'virgula', name: 'Floresta das Vírgulas', desc: 'Pontue frases sem vírgula: conectivo, adjunto deslocado, intercalada, mas/porém/pois.', kinds: ['comma'], duel: ['virgula'],
       bg: { s0: '#141a45', s1: '#34397a', hill: '#242b5f', gnd: '#2a2240', edge: '#3b3160', deco: 'hills' },
       enemies: [['Slime do Spam', 0], ['Bot de Fake News', 1], ['Morcego do Scroll', 2], ['Fantasma da Distração', 3], ['Troll do Comentário', 4]], boss: ['Rei Algoritmo', 5] },
-    { id: 'escrita', name: 'Vila das Palavras', desc: 'Grafia de conectivos e obras, ortografia e palavras repetidas.', kinds: ['spell', 'repeat'],
+    { id: 'escrita', name: 'Vila das Palavras', desc: 'Grafia de conectivos e obras, ortografia e palavras repetidas.', kinds: ['spell', 'repeat'], duel: ['intro', 'dev'],
       bg: { s0: '#2b1a45', s1: '#7a4a6a', hill: '#3d2757', gnd: '#3a2a3a', edge: '#5a4060', deco: 'hills' },
       enemies: [['Gárgula do Erro', 'gargula'], ['Corvo da Repetição', 'corvo']], boss: ['Escriba Sombrio', 'escriba'] },
-    { id: 'proposta', name: 'Fortaleza da Proposta', desc: 'Monte a proposta de intervenção: agente, ação, meio, finalidade e detalhamento.', kinds: ['slots'],
+    { id: 'proposta', name: 'Fortaleza da Proposta', desc: 'Monte a proposta de intervenção: agente, ação, meio, finalidade e detalhamento.', kinds: ['slots'], duel: ['conc'],
       bg: { s0: '#16243a', s1: '#3a5a7a', hill: '#25384f', gnd: '#262f3d', edge: '#3c4b60', deco: 'pillars' },
       enemies: [['Burocrata do Nada', 'buro'], ['Fiscal do Genérico', 'buro2']], boss: ['Hidra do “O Governo”', 'hidra'] },
-    { id: 'repertorio', name: 'Biblioteca dos Repertórios', desc: 'Apresente, explique e conecte: repertório em 3 frases.', kinds: ['rorder', 'rconnect', 'rclass'],
+    { id: 'repertorio', name: 'Biblioteca dos Repertórios', desc: 'Apresente, explique e conecte: repertório em 3 frases.', kinds: ['rorder', 'rconnect', 'rclass'], duel: ['rep'],
       bg: { s0: '#2a1a14', s1: '#6a4a30', hill: '#3d2a1e', gnd: '#33261c', edge: '#5a4430', deco: 'shelves' },
       enemies: [['Livro Assombrado', 'livro'], ['Espectro do Spoiler', 'espectro']], boss: ['Bibliotecário Caído', 'biblio'] },
-    { id: 'estrutura', name: 'Torre dos Parágrafos', desc: 'Quatro parágrafos bem separados: introdução, D1, D2 e conclusão.', kinds: ['porder', 'pclass', 'psplit'],
+    { id: 'estrutura', name: 'Torre dos Parágrafos', desc: 'Quatro parágrafos bem separados: introdução, D1, D2 e conclusão.', kinds: ['porder', 'pclass', 'psplit'], duel: ['dev', 'intro', 'conc'],
       bg: { s0: '#0f2a2e', s1: '#2f6a6a', hill: '#1c4448', gnd: '#1f3236', edge: '#34585c', deco: 'tower' },
       enemies: [['Golem de Blocos', 'golem'], ['Bloco de Texto Corrido', 'blob']], boss: ['Titã do Texto Corrido', 'tita'] },
-    { id: 'torre', name: 'Castelo da Redação', desc: 'Prova final: todos os exercícios misturados. Quanto mais você erra um tipo, mais ele aparece.', kinds: ['*'],
+    { id: 'torre', name: 'Castelo da Redação', desc: 'Prova final: todos os exercícios misturados. Quanto mais você erra um tipo, mais ele aparece.', kinds: ['*'], duel: ['intro', 'dev', 'conc', 'rep'],
       bg: { s0: '#2a0f1a', s1: '#7a2a3a', hill: '#4a1a28', gnd: '#2e1620', edge: '#5a2a3a', deco: 'castle' },
       enemies: [['Escrivão Fantasma', 'espectro2'], ['Gárgula Sombria', 'gargula2'], ['Golem de Introdução', 'golem2']], boss: ['Corretor Supremo', 'corretor'] }
   ];
@@ -724,18 +724,44 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
   SPR.golem2 = { pal: { s: '#6fa3d6', d: '#47709c', r: '#ffe27a' }, rows: SPR.golem.rows };
   SPR.espectro2 = { pal: { b: '#ffc9c9', d: '#d68f8f', k: '#1c1630', w: '#ffffff' }, rows: SPR.espectro.rows };
   SPR.gargula2 = { pal: { s: '#c9a24a', d: '#8a6a22', r: '#ff4d4d', w: '#ffffff' }, rows: SPR.gargula.rows };
+  var THEME_KW = [
+    /\b(inteligência artificial|IA|tecnologia|educação|escolas?|estudantes?|alunos?)\b/i,
+    /\b(fake news|notícias falsas|desinformação|boatos?|checagem|informação|informações)\b/i,
+    /\b(saúde mental|ansiedade|redes sociais|jovens|adolescentes|isolamento)\b/i,
+    /\b(desigualdade|acesso|internet|tecnologia|conectividade|digital)\b/i,
+    /\b(telas?|vício|concentração|celular|redes sociais|leitura)\b/i,
+    /\b(educação técnica|ensino técnico|cursos técnicos|tecnológic[ao]s?|mercado de trabalho|profissionais?|formação)\b/i
+  ];
+  /* partes da redação: w = palavras, s = frases, t = segundos no duelo */
+  var PW = {
+    virgula: { name: 'Duas frases pontuadas', formula: 'duas frases: uma com conectivo inicial seguido de vírgula e outra com expressão intercalada entre vírgulas', w: [18, 70], s: [2, 3], t: 120,
+      hint: 'Escreva 2 frases sobre o tema. Comece uma com conectivo (Ademais, Nesse sentido, Por outro lado) e ponha uma expressão intercalada entre vírgulas (segundo especialistas, por exemplo).',
+      checks: ['size', 'sents', 'hasconn', 'conn', 'interc', 'first', 'spell', 'rep'] },
+    intro: { name: 'Introdução', formula: 'contexto + tese', w: [30, 90], s: [2, 4], t: 180,
+      hint: 'Contexto em 1 ou 2 frases e tese na última frase. Sem 1ª pessoa e sem repetir palavras.',
+      checks: ['oneP', 'size', 'sents', 'theme', 'thesis', 'first', 'conn', 'spell', 'rep'] },
+    dev: { name: 'Desenvolvimento (D1 ou D2)', formula: 'tópico frasal + explicação + repertório explicado + ligação com a tese', w: [55, 150], s: [4, 7], t: 240,
+      hint: 'Tópico frasal com conectivo, explicação, repertório (obra ou dado) explicado e ligação com a tese na última frase.',
+      checks: ['oneP', 'size', 'sents', 'topic', 'repcue', 'link', 'first', 'conn', 'spell', 'rep'] },
+    conc: { name: 'Conclusão com proposta', formula: 'retomada da tese + agente específico + ação + meio + finalidade + detalhamento', w: [50, 140], s: [3, 6], t: 240,
+      hint: 'Retome a tese e proponha: agente específico (um órgão, não “o governo”), ação, meio, finalidade e, na última frase, o detalhamento.',
+      checks: ['oneP', 'size', 'sents', 'retoma', 'agent', 'acao', 'meio', 'fim', 'det', 'conn', 'spell', 'rep'] },
+    rep: { name: 'Repertório em 3 frases', formula: '(1) apresenta a obra ou o dado, (2) explica o que acontece nela, (3) conecta com a tese', w: [30, 90], s: [3, 3], t: 150,
+      hint: 'Exatamente 3 frases: apresente a obra ou o dado, explique o que acontece nela e conecte com o tema.',
+      checks: ['sents', 'repcue', 'expl', 'link', 'conn', 'spell', 'rep'] }
+  };
   /* DATA END */
 
   /* ---------- salvamento ---------- */
   var KEY = 'cavaleiro-virgula-v2', OLD_KEY = 'cavaleiro-virgula-v1';
   function loadSave() {
-    var d = { coins: 0, lv: { sword: 0, armor: 0, helm: 0, clock: 0, luck: 0 }, realms: {}, miss: {}, hits: 0, tries: 0, mode: 'mixed', sound: true, cape: 0, last: 0, essays: [], draft: '', theme: 0, repOk: false };
+    var d = { coins: 0, lv: { sword: 0, armor: 0, helm: 0, clock: 0, luck: 0 }, realms: {}, miss: {}, hits: 0, tries: 0, mode: 'mixed', sound: true, cape: 0, last: 0, essays: [], draft: '', theme: 0, repOk: false, part: 'intro', drafts: {}, pbest: {}, lastReward: '' };
     try {
       var r = JSON.parse(localStorage.getItem(KEY) || 'null'), j, k;
       if (r) {
         for (k in r) { if (k !== 'lv' && k !== 'miss' && k !== 'realms') d[k] = r[k]; }
         for (j in (r.lv || {})) d.lv[j] = r.lv[j];
-        d.miss = r.miss || {}; d.realms = r.realms || {};
+        d.miss = r.miss || {}; d.realms = r.realms || {}; d.drafts = r.drafts || {}; d.pbest = r.pbest || {};
       } else {
         var o = JSON.parse(localStorage.getItem(OLD_KEY) || 'null');
         if (o) {
@@ -1066,7 +1092,7 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
         okLine: 'Todos os elementos no lugar certo: agente específico, ação, meio, finalidade e detalhamento.' };
     }
   };
-  function kindOf(q) { return q.kind === 'comma' ? KIND.comma : q.kind === 'choice' ? KIND.choice : q.kind === 'order' ? KIND.order : KIND.slots; }
+  function kindOf(q) { return KIND[q.kind]; }
 
   function parseTyped(txt) {
     var t = txt.replace(/\s+,/g, ',').replace(/,{2,}/g, ',').replace(/,(?=\S)/g, ', ').trim().replace(/^,+\s*/, '');
@@ -1088,7 +1114,7 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
   function renderQ() {
     $('qmode').textContent = q.label;
     $('qinst').textContent = q.inst;
-    $('qhint').textContent = q.kind === 'comma' && q.mode === 'type' ? 'Enter também golpeia' : q.kind === 'choice' ? 'Teclas 1 a 4 escolhem. Enter golpeia.' : 'Enter também golpeia';
+    $('qhint').textContent = q.kind === 'write' ? 'Ctrl+Enter também golpeia. O checklist mostra o que falta.' : q.kind === 'choice' ? 'Teclas 1 a 4 escolhem. Enter golpeia.' : 'Enter também golpeia';
     kindOf(q).render(q);
   }
   function updOrder() {
@@ -1109,7 +1135,7 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
     var st = run.stage, R = run.realm, boss = st % 5 === 0, e = boss ? R.boss : R.enemies[(st - 1 - Math.floor(st / 5)) % R.enemies.length];
     var max = Math.round((50 + 18 * (st - 1)) * (boss ? 2.2 : 1));
     run.enemy = { name: e[0], type: e[1], boss: boss, hp: max, max: max };
-    an.die = 0;
+    an.die = 0; run.duelDone = false;
   }
   function startBattle() { spawn(); show('battle'); updBars(); nextQuestion(); }
   function nextQuestion() {
@@ -1129,8 +1155,9 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
     if (ok) {
       save.hits++;
       run.combo++;
-      var dmg = Math.round((14 + 6 * save.lv.sword) * (1 + 0.5 * frac) * (1 + 0.1 * Math.min(run.combo, 10)));
+      var dmg = res.dmg || Math.round((14 + 6 * save.lv.sword) * (1 + 0.5 * frac) * (1 + 0.1 * Math.min(run.combo, 10)));
       e.hp -= dmg;
+      if (e.boss && !run.duelDone) e.hp = Math.max(e.hp, Math.ceil(e.max * 0.5));
       run.score += Math.round((100 + 100 * frac) * (1 + 0.1 * Math.min(run.combo, 10)));
       var gain = Math.round((2 + Math.min(run.combo, 5)) * (1 + 0.15 * save.lv.luck));
       save.coins += gain;
@@ -1147,7 +1174,7 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
         showFb(true, msg, '', false);
         setTimeout(victory, q.kind === 'comma' ? 1500 : 2600);
       } else if (q.kind === 'comma') {
-        var my = tok; setTimeout(function () { if (tok === my) nextQuestion(); }, 1100);
+        var my = tok; setTimeout(function () { if (tok === my) advance(); }, 1100);
         showFb(true, msg, '', false);
       } else {
         showFb(true, msg, '', 'Próxima');
@@ -1171,7 +1198,7 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
     fb.className = 'fb ' + (ok ? 'good' : 'badc');
     fb.innerHTML = html; fb.hidden = false;
     var b = $('bnext');
-    if (b) { b.addEventListener('click', function () { if (run.hp <= 0) gameOver(); else nextQuestion(); }); b.focus(); }
+    if (b) { b.addEventListener('click', function () { if (run.hp <= 0) gameOver(); else advance(); }); b.focus(); }
   }
 
   function victory() {
@@ -1284,72 +1311,102 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
   }
   function toMenu() { run = null; q = null; phase = 'menu'; tok++; renderMenu(); show('menu'); }
 
-  /* ---------- sala da redação ---------- */
+  /* ---------- duelo de escrita e oficina de parágrafos ---------- */
+  /* Correção automática simples: confere critérios que dá para medir no texto. Para nota de verdade, o jogo copia o pedido para o Claude. */
   var STOP = ('para como mais mas pois quando porque também sobre entre depois antes ainda muito muitos muitas assim essa esse esses essas dessa desse isso aquele aquela seus suas pela pelo pelas pelos onde cada outros outras outro outra tudo todos todas foram sendo está estão tem têm havia ' +
     'pode podem deve devem forma modo maneira outras tanto mesmo mesma então porém contudo portanto ademais além disso nesse nessa neste desta deste dessas desses seja sejam fazer feito vezes cada qual quais quem').split(' ');
   var CONNS = 'Ademais|Portanto|Além disso|Nesse sentido|Por fim|Dessa forma|Dessa maneira|Em suma|Em síntese|Em contrapartida|Por outro lado|Contudo|Entretanto|Todavia|Sobretudo|Primeiramente|Nesse contexto|Diante disso|Em primeiro lugar|Em segundo lugar|Em primeiro plano|Em conclusão';
+  var SPEC_ORG = /(Ministério|Secretaria|Congresso|Agência|Instituto|Prefeitura|Câmara|Conselho|Universidade|Anatel|IBGE|Tribunal|Defensoria)/;
+  var GEN_AG = /\b(o governo|a sociedade|todos nós|as autoridades|o estado)\b/i;
+  var TOPIC_RE = /^(Em primeiro lugar|Em primeiro plano|Primeiramente|Em segundo lugar|Em segundo plano|Inicialmente|Ademais|Além disso|Nesse sentido|Nesse contexto|Por outro lado|Outrossim|Sobretudo|Dessa forma|Também|Por fim),/;
+  var CONCL_RE = /^(Portanto|Em suma|Em síntese|Em conclusão|Logo|Dessa forma|Dessa maneira|Assim|Por fim|Diante disso|Nesse sentido),/;
+  var REPCUE_RE = /\b(filme|livro|obra|série|animação|romance|pesquisa|segundo|de acordo com|filósofo|revista|IBGE|UNESCO|Orwell|Matrix|Wall-E|Platão|Tolkien|Bauman|dados|estudo|relatório)\b/i;
+  var EXPL_RE = /\b(mostra|mostram|retrata|retratam|apresenta|apresentam|revela|revelam|narra|conta|trama|história|nela|nele|na obra|no filme|no livro|na animação|os dados|a pesquisa|o estudo)\b/i;
+  var LINK_RE = /(Da mesma forma|Do mesmo modo|De modo semelhante|Assim como|Analogamente|Dessa forma|Dessa maneira|Logo|Portanto|Nesse sentido|Semelhantemente|Por isso|Assim,)/i;
+  var ACAO_RE = /\b(deve|devem|precisa|precisam|cabe|é necessário|é fundamental)\b/i;
+  var MEIO_RE = /\b(por meio d[eao]s?|mediante|através d[eao]s?|com o uso d[eao]s?)\b/i;
+  var FIM_RE = /\b(a fim de|para que|com o objetivo de|com a finalidade de|de modo a|com o intuito de)\b/i;
+  var DET_RE = /(\d+|\bsemanais?\b|\bmensais?\b|\bquinzenais?\b|\bsemestres?\b|\bsemestral\b|\banual\b|\banuais\b|\bbimestre\b|\bdiariamente\b|\bprofessores\b|\bpsicólogos\b|\bjornalistas\b|\bespecialistas\b|\bprofissionais\b|\bequipe\b|\bprioridade\b|\bturno\b|\bcidades\b)/i;
+  var FIRST_RE = /\b(eu acho|na minha opinião|eu penso|eu acredito|acredito que|meu ponto de vista|na minha visão)\b/i;
+
   function paragraphsOf(t) { return t.split(/\n+/).map(function (s) { return s.trim(); }).filter(Boolean); }
-  function analyze(text) {
-    var out = [], paras = paragraphsOf(text), words = text.trim() ? text.trim().split(/\s+/).length : 0, m, list;
-    var re = new RegExp('(^|[.!?]\\s+|\\n\\s*)(' + CONNS + ')(?=\\s+[A-Za-zÀ-ú])', 'g'), miss = [];
-    while ((m = re.exec(text))) miss.push(m[2]);
-    out.push({ l: 'Vírgula depois de todo conectivo inicial', ok: !miss.length, d: miss.length ? 'Sem vírgula depois de: ' + miss.slice(0, 4).join(', ') + '.' : 'Nenhum conectivo inicial sem vírgula.' });
-    list = [];
+  function wordsOf(t) { return t.trim() ? t.trim().split(/\s+/).length : 0; }
+  function sentencesOf(t) {
+    var s = t.trim().replace(/\b([A-ZÀ-Ú])\.(?=\s*[A-ZÀ-Ú]\.|\s+[A-ZÀ-Ú][a-zà-ú])/g, '$1\u0001');
+    var m = s.match(/[^.!?]+(?:[.!?]+|$)/g) || [];
+    return m.map(function (x) { return x.replace(/\u0001/g, '.').trim(); }).filter(function (x) { return x.length > 1; });
+  }
+  function connMiss(text) {
+    var re = new RegExp('(^|[.!?]\\s+|\\n\\s*)(' + CONNS + ')(?=\\s+[A-Za-zÀ-ú])', 'g'), m, out = [];
+    while ((m = re.exec(text))) out.push(m[2]);
+    return out;
+  }
+  function spellIssues(text) {
+    var list = [];
     if (/\bPor tanto\b/i.test(text)) list.push('“Por tanto” (use Portanto)');
     if (/\bAlem disso\b/i.test(text)) list.push('“Alem disso” (use Além disso)');
     if (/\bA demais\b|\bAdemáis\b/.test(text)) list.push('“A demais” (use Ademais)');
     if (/\bafim de\b/i.test(text)) list.push('“afim de” (use a fim de)');
     if (/\bmal uso\b/i.test(text)) list.push('“mal uso” (use mau uso)');
-    out.push({ l: 'Portanto, Além disso e Ademais escritos certo', ok: !list.length, d: list.length ? 'Confira: ' + list.join('; ') + '.' : 'Nenhum erro conhecido encontrado.' });
-    list = [];
-    if (/(^|[^A-Za-zÀ-ú])(o hobbit|O hobbit|o Hobbit)(?![A-Za-zÀ-ú])/.test(text)) list.push('O Hobbit');
-    if (/\b(the economist|The economist|THE ECONOMIST)\b/.test(text)) list.push('The Economist');
-    out.push({ l: 'Nomes de obras e revistas corretos', ok: !list.length, d: list.length ? 'Confira a grafia de: ' + list.join(', ') + '.' : 'Nenhum nome grafado errado encontrado.' });
-    var last = paras.length ? paras[paras.length - 1] : '', gen = /\b(o governo|a sociedade|todos nós|as autoridades|o estado)\b/i.exec(last);
-    var spec = /(Ministério|Secretaria|Congresso|Agência|Instituto|Prefeitura|Câmara|Conselho|Universidade|Anatel|IBGE|Tribunal|Defensoria)/.test(last);
-    out.push({ l: 'Agente específico na proposta', ok: !gen && spec, d: gen ? 'Agente genérico na conclusão: “' + gen[1] + '”. Use um órgão, como o Ministério da Educação.' : (spec ? 'Há um agente específico na conclusão.' : 'Não achei um órgão específico na conclusão.') });
-    out.push({ l: 'Repertório explicado e ligado à tese', manual: true });
-    var rep = [], pi;
-    paras.forEach(function (p, idx) {
-      var cnt = {}, w = p.toLowerCase().replace(/[^a-zà-ú\s-]/g, ' ').split(/\s+/);
-      w.forEach(function (x) { if (x.length >= 6 && STOP.indexOf(x) < 0) cnt[x] = (cnt[x] || 0) + 1; });
-      for (pi in cnt) if (cnt[pi] > 2) rep.push('“' + pi + '” ' + cnt[pi] + 'x no parágrafo ' + (idx + 1));
-    });
-    var cen = (text.toLowerCase().match(/nesse cenário/g) || []).length;
-    if (cen > 1) rep.push('“nesse cenário” ' + cen + 'x no texto');
-    out.push({ l: 'Nenhuma palavra repetida mais de duas vezes por parágrafo', ok: !rep.length, d: rep.length ? rep.slice(0, 4).join('; ') + '.' : 'Nenhuma repetição excessiva encontrada.' });
-    out.push({ l: 'Quatro parágrafos separados', ok: paras.length === 4, d: paras.length === 4 ? 'Você tem 4 parágrafos.' : 'Você tem ' + paras.length + ' parágrafo(s). Separe em 4: introdução, D1, D2 e conclusão.' });
-    return { checks: out, words: words, paras: paras.length, lines: Math.round(words / 11) };
+    if (/(^|[^A-Za-zÀ-ú])(o hobbit|O hobbit|o Hobbit)(?![A-Za-zÀ-ú])/.test(text)) list.push('“O Hobbit” com maiúsculas');
+    if (/\b(the economist|The economist|THE ECONOMIST)\b/.test(text)) list.push('“The Economist” com maiúsculas');
+    return list;
   }
-  function renderWrite() {
-    var text = $('wtext').value, a = analyze(text), has = text.trim().length > 20;
-    $('wcount').textContent = a.words + ' palavras · ' + a.paras + ' parágrafo(s) · cerca de ' + a.lines + ' linhas (o alvo é 25 a 30)';
-    $('wcheck').innerHTML = a.checks.map(function (c, i) {
-      if (c.manual) return '<li><span class="st ' + (save.repOk ? 'ok' : 'idle') + '">' + (save.repOk ? 'Ok' : 'Você') + '</span><label><input type="checkbox" id="wrep"' + (save.repOk ? ' checked' : '') + '> ' + c.l + '</label><span class="dt">Marque quando o repertório tiver 3 frases: apresenta, explica e conecta.</span></li>';
+  function repIssues(text) {
+    var cnt = {}, out = [], k, w = text.toLowerCase().replace(/[^a-zà-ú\s-]/g, ' ').split(/\s+/);
+    w.forEach(function (x) { if (x.length >= 6 && STOP.indexOf(x) < 0) cnt[x] = (cnt[x] || 0) + 1; });
+    for (k in cnt) if (cnt[k] > 2) out.push('“' + k + '” ' + cnt[k] + 'x');
+    var cen = (text.toLowerCase().match(/nesse cenário/g) || []).length;
+    if (cen > 1) out.push('“nesse cenário” ' + cen + 'x');
+    return out;
+  }
+  var yes = function (d) { return { ok: true, d: d || 'Ok.' }; };
+  var no = function (d) { return { ok: false, d: d }; };
+  var lastOf = function (c) { return c.sents[c.sents.length - 1] || ''; };
+  var CK = {
+    oneP: { label: 'Um único parágrafo, sem linha em branco', cat: 'Estrutura dos parágrafos', fn: function (t) { var n = paragraphsOf(t).length; return n === 1 ? yes() : no('Você escreveu ' + n + ' parágrafos. Aqui vale um só.'); } },
+    size: { label: 'Tamanho adequado', cat: 'Estrutura dos parágrafos', fn: function (t, c) { var w = wordsOf(t), r = PW[c.part].w, d = w + ' palavras (alvo: ' + r[0] + ' a ' + r[1] + ').'; return w >= r[0] && w <= r[1] ? yes(d) : no(d); } },
+    sents: { label: 'Número de frases', cat: 'Estrutura dos parágrafos', fn: function (t, c) { var n = c.sents.length, r = PW[c.part].s, d = n + ' frase(s) (alvo: ' + (r[0] === r[1] ? r[0] : r[0] + ' a ' + r[1]) + ').'; return n >= r[0] && n <= r[1] ? yes(d) : no(d); } },
+    theme: { label: 'Fala do tema', cat: 'Estrutura dos parágrafos', fn: function (t, c) { return THEME_KW[c.theme].test(t) ? yes() : no('Não achei palavras do tema no texto.'); } },
+    thesis: { label: 'Tese na última frase', cat: 'Estrutura dos parágrafos', fn: function (t, c) { return THEME_KW[c.theme].test(lastOf(c)) ? yes() : no('A última frase deve trazer a tese, ligada ao tema.'); } },
+    topic: { label: 'Tópico frasal com conectivo e vírgula', cat: 'Estrutura dos parágrafos', fn: function (t, c) { return TOPIC_RE.test(c.sents[0] || '') ? yes() : no('Comece com um conectivo seguido de vírgula, como Em primeiro lugar, ou Ademais,.'); } },
+    repcue: { label: 'Repertório citado (obra, dado ou fonte)', cat: 'Repertório', fn: function (t) { return REPCUE_RE.test(t) ? yes() : no('Cite um filme, livro, pesquisa ou dado.'); } },
+    expl: { label: 'Repertório explicado na 2ª frase', cat: 'Repertório', fn: function (t, c) { return EXPL_RE.test(c.sents[1] || '') ? yes() : no('A 2ª frase deve explicar o que acontece na obra ou o que os dados mostram.'); } },
+    link: { label: 'Ligação com a tese na última frase', cat: 'Repertório', fn: function (t, c) { var l = lastOf(c); return LINK_RE.test(l) && THEME_KW[c.theme].test(l) ? yes() : no('A última frase deve conectar com o tema usando Da mesma forma, Assim como ou semelhante.'); } },
+    retoma: { label: 'Retomada da tese com conectivo conclusivo', cat: 'Estrutura dos parágrafos', fn: function (t, c) { var f = c.sents[0] || ''; return CONCL_RE.test(f) && THEME_KW[c.theme].test(f) ? yes() : no('Comece com Portanto, ou Em suma, e retome o tema.'); } },
+    agent: { label: 'Agente específico', cat: 'Proposta: agente genérico', fn: function (t) { var g = GEN_AG.exec(t); return g ? no('Agente genérico: “' + g[1] + '”. Nomeie um órgão, como o Ministério da Educação.') : SPEC_ORG.test(t) ? yes() : no('Não achei um órgão específico, como o Ministério da Educação.'); } },
+    acao: { label: 'Ação com verbo claro', cat: 'Proposta: ação', fn: function (t) { return ACAO_RE.test(t) ? yes() : no('Diga o que o agente deve fazer: “deve ampliar…”, “precisa criar…”.'); } },
+    meio: { label: 'Meio (como)', cat: 'Proposta: meio', fn: function (t) { return MEIO_RE.test(t) ? yes() : no('Use “por meio de” + algo concreto.'); } },
+    fim: { label: 'Finalidade (para quê)', cat: 'Proposta: finalidade', fn: function (t) { return FIM_RE.test(t) ? yes() : no('Use “a fim de” ou “para que” + objetivo.'); } },
+    det: { label: 'Detalhamento na última frase', cat: 'Proposta: detalhamento', fn: function (t, c) { return c.sents.length >= 3 && DET_RE.test(lastOf(c)) ? yes() : no('Termine com uma frase que detalhe quando, quem ou quanto (ex.: “As oficinas serão quinzenais…”).'); } },
+    hasconn: { label: 'Uma frase começa com conectivo e vírgula', cat: 'Conectivo no início', fn: function (t, c) { var re = new RegExp('^(' + CONNS + '),'); return c.sents.some(function (s) { return re.test(s); }) ? yes() : no('Comece uma frase com Ademais,, Nesse sentido, ou outro conectivo.'); } },
+    interc: { label: 'Expressão intercalada entre vírgulas', cat: 'Expressão intercalada', fn: function (t, c) { return c.sents.some(function (s) { return (s.match(/,/g) || []).length >= 2; }) ? yes() : no('Use uma expressão entre vírgulas, como “segundo especialistas,”.'); } },
+    conn: { label: 'Vírgula depois de todo conectivo inicial', cat: 'Conectivo no início', fn: function (t) { var m = connMiss(t); return m.length ? no('Sem vírgula depois de: ' + m.slice(0, 4).join(', ') + '.') : yes(); } },
+    spell: { label: 'Grafia: Portanto, Além disso, Ademais e nomes de obras', cat: 'Escrita e ortografia', fn: function (t) { var l = spellIssues(t); return l.length ? no('Confira: ' + l.join('; ') + '.') : yes(); } },
+    first: { label: 'Sem 1ª pessoa', cat: 'Estrutura dos parágrafos', fn: function (t) { return FIRST_RE.test(t) ? no('Evite “eu acho” e “na minha opinião”. Escreva de forma impessoal.') : yes(); } },
+    rep: { label: 'Nenhuma palavra repetida mais de 2 vezes', cat: 'Repetição de palavras', fn: function (t) { var l = repIssues(t); return l.length ? no('Repetições: ' + l.slice(0, 4).join(', ') + '.') : yes(); } }
+  };
+  function evalPart(text, part, theme) {
+    var c = { part: part, theme: theme, sents: sentencesOf(text) }, has = text.trim().length > 0;
+    var rows = PW[part].checks.map(function (k) {
+      var def = CK[k], r = has ? def.fn(text, c) : { ok: false, d: 'Escreva o texto para conferir.' };
+      return { key: k, label: def.label, cat: def.cat, ok: !!r.ok, d: r.d };
+    });
+    var passed = rows.filter(function (r) { return r.ok; }).length;
+    return { rows: rows, passed: passed, total: rows.length, score: rows.length ? passed / rows.length : 0, has: has };
+  }
+  function checksHtml(rows, has) {
+    return rows.map(function (c) {
       var st = !has ? 'idle' : c.ok ? 'ok' : 'warn';
-      return '<li><span class="st ' + st + '">' + (!has ? '–' : c.ok ? 'Ok' : 'Atenção') + '</span><span>' + c.l + '</span><span class="dt">' + (has ? esc(c.d) : 'Escreva o texto para conferir.') + '</span></li>';
+      return '<li><span class="st ' + st + '">' + (!has ? '–' : c.ok ? 'Ok' : 'Atenção') + '</span><span>' + esc(c.label) + '</span>' + (has && c.ok ? '' : '<span class="dt">' + esc(c.d) + '</span>') + '</li>';
     }).join('');
   }
-  function renderHist() {
-    var ess = save.essays || [];
-    $('whist').innerHTML = ess.length ? ess.slice(-8).map(function (e, i, arr) {
-      var prev = i > 0 ? arr[i - 1].score : (ess.length > arr.length ? ess[ess.length - arr.length - 1].score : 640), df = e.score - prev;
-      return '<li>' + esc(e.date) + ' · ' + esc(THEMES[e.theme] || '') + ': <b>' + e.score + '</b> (' + (df >= 0 ? '+' : '') + df + ')</li>';
-    }).join('') : '<li>Nenhuma nota registrada ainda. Sua base é ~640.</li>';
-  }
-  function openWrite() {
-    $('wtheme').innerHTML = THEMES.map(function (t, i) { return '<option value="' + i + '">' + (i + 1) + '. ' + esc(t) + '</option>'; }).join('');
-    $('wtheme').value = save.theme || 0;
-    $('wtext').value = save.draft || '';
-    $('wmsg').textContent = '';
-    renderWrite(); renderHist(); show('write');
-  }
-  function buildPrompt() {
+  function buildPartPrompt(part, theme, text) {
     return 'Você é meu professor de redação. Responda sempre em português do Brasil, de forma direta e honesta. Não infle notas: prefiro uma avaliação rigorosa e realista.\n\n' +
-      'Contexto: estou me preparando para a prova de redação do processo seletivo do curso de Tecnologia em Análise e Desenvolvimento de Sistemas (TADS) do IFSul, campus Venâncio Aires. Minha última redação foi estimada em ~640/1000 (estilo ENEM).\n' +
+      'Contexto: estou me preparando para a prova de redação do processo seletivo do curso de Tecnologia em Análise e Desenvolvimento de Sistemas (TADS) do IFSul, campus Venâncio Aires. Minha última redação completa foi estimada em ~640/1000 (estilo ENEM).\n' +
       'Meus pontos a melhorar: vírgulas (conectivos iniciais, expressões intercaladas, adjunto deslocado, sujeito separado do verbo), agente genérico na proposta, repertório pouco explicado, introdução misturada com o primeiro argumento, repetição de palavras e detalhes de escrita (Portanto, Além disso, O Hobbit, The Economist).\n\n' +
-      'Tarefa (Modo 4: redação completa): corrija a redação abaixo com nota por competência (C1 a C5, 0 a 200 cada), indicando erros de vírgula, ortografia, coesão, repertório e proposta. Explique o motivo de cada correção em uma frase curta. Mostre uma versão reescrita dos trechos mais fracos e compare com minha nota anterior (~640). Use o checklist: vírgula depois de conectivo inicial, Portanto/Além disso/Ademais certos, nomes de obras corretos, agente específico, repertório explicado, nenhuma palavra repetida mais de duas vezes por parágrafo e quatro parágrafos separados. Ao final, diga qual é meu erro mais frequente e sugira o próximo exercício.\n\n' +
-      'Tema: ' + THEMES[+$('wtheme').value] + '\n\nRedação:\n' + $('wtext').value.trim();
+      'Tarefa: corrija apenas este trecho da redação (' + PW[part].name + '). Fórmula esperada: ' + PW[part].formula + '. Avalie por competência (C1 a C5, 0 a 200 cada) só no que se aplica a este trecho, indique erros de vírgula, ortografia, coesão, repertório e proposta, explique o motivo de cada correção em uma frase curta e mostre uma versão reescrita dos trechos mais fracos. Ao final, diga qual é meu erro mais frequente e sugira o próximo exercício.\n\n' +
+      'Tema: ' + THEMES[theme] + '\n\nTrecho (' + PW[part].name + '):\n' + text.trim();
   }
   function copyText(txt) {
     if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(txt);
@@ -1357,6 +1414,72 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
       var ta = document.createElement('textarea'); ta.value = txt; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select();
       try { document.execCommand('copy') ? res() : rej(); } catch (e) { rej(e); } document.body.removeChild(ta);
     });
+  }
+
+  /* duelo: o chefe abre um duelo quando chega na metade da vida */
+  KIND.write = {
+    render: function (q) {
+      $('qbox').innerHTML = ctxBox({ plain: true, ctx: '<p><b>Tema:</b> ' + esc(THEMES[q.theme]) + '</p><p><b>Parte:</b> ' + esc(PW[q.part].name) + ' (' + esc(PW[q.part].formula) + ')</p>' }) +
+        '<textarea class="write" id="wduel" rows="7" spellcheck="true" aria-label="Seu texto" placeholder="Escreva aqui, em um único parágrafo."></textarea><p class="hint" id="wdcount"></p><ul class="check" id="wdcheck"></ul>';
+      updDuel(); $('wduel').focus();
+    },
+    check: function (q) {
+      var text = $('wduel').value, r = evalPart(text, q.part, q.theme), e = run.enemy, ok = r.has && r.score >= 0.75, cats = [];
+      q.lastText = text;
+      var fails = r.rows.filter(function (x) { return !x.ok; });
+      fails.forEach(function (x) { if (cats.indexOf(x.cat) < 0) cats.push(x.cat); });
+      var list = fails.length ? '<ul>' + fails.map(function (x) { return '<li><b>' + esc(x.label) + ':</b> ' + esc(x.d) + '</li>'; }).join('') + '</ul>' : '';
+      var btn = text.trim() ? '<div class="actions"><button type="button" class="btn ghost" id="bcopyduel">Copiar para o Claude corrigir</button></div>' : '';
+      var pct = Math.round(r.score * 100) + '%';
+      return { ok: ok, cats: ok ? [] : (cats.length ? cats : ['Estrutura dos parágrafos']), dmg: Math.round(e.max * (r.score === 1 ? 0.5 : 0.35)),
+        head: r.has ? 'Parágrafo reprovado (' + pct + ').' : 'Você não escreveu nada.',
+        body: (r.has ? '<p>Passou em ' + r.passed + ' de ' + r.total + ' critérios. É preciso 75%.</p>' : '') + list + btn,
+        okLine: r.score === 1 ? 'Parágrafo perfeito nos ' + r.total + ' critérios: golpe máximo!' : 'Parágrafo aprovado com ' + pct + ' dos critérios.',
+        extra: (list ? '<p>Ainda dá para melhorar:</p>' + list : '') + btn };
+    }
+  };
+  function updDuel() {
+    var ta = $('wduel');
+    if (!ta || !q || q.kind !== 'write') return;
+    var r = evalPart(ta.value, q.part, q.theme);
+    $('wdcount').textContent = wordsOf(ta.value) + ' palavras · ' + r.passed + ' de ' + r.total + ' critérios. 75% dá o golpe e 100% dá o golpe máximo.';
+    $('wdcheck').innerHTML = checksHtml(r.rows, r.has);
+  }
+  function shouldDuel() { var e = run.enemy; return e.boss && !run.duelDone && e.hp > 0 && e.hp <= e.max * 0.5; }
+  function advance() { if (shouldDuel()) startDuel(); else nextQuestion(); }
+  function startDuel() {
+    run.duelDone = true;
+    var parts = run.realm.duel, part = parts[(Math.floor(run.stage / 5) - 1) % parts.length];
+    tok++; phase = 'ask';
+    q = { kind: 'write', part: part, theme: rint(THEMES.length), label: 'Duelo de escrita: ' + PW[part].name, inst: PW[part].hint };
+    q.limit = PW[part].t + 8 * save.lv.clock;
+    renderQ();
+    $('fb').hidden = true; $('qact').hidden = false;
+    t0 = performance.now(); updHud();
+  }
+
+  /* oficina: treinar uma parte da redação por vez, sem luta */
+  function renderWrite() {
+    var part = $('wpart').value, theme = +$('wtheme').value, text = $('wtext').value, r = evalPart(text, part, theme);
+    $('whint').textContent = PW[part].hint;
+    $('wcount').textContent = wordsOf(text) + ' palavras · ' + sentencesOf(text).length + ' frase(s) · ' + r.passed + ' de ' + r.total + ' critérios';
+    $('wcheck').innerHTML = checksHtml(r.rows, r.has);
+    if (r.has) { var pct = Math.round(r.score * 100); if (pct > (save.pbest[part] || 0)) { save.pbest[part] = pct; persist(); renderHist(); } }
+  }
+  function renderHist() {
+    $('whist').innerHTML = WORK_ORDER.map(function (k) {
+      return '<li>' + esc(PW[k].name) + ': <b>' + (save.pbest[k] != null ? save.pbest[k] + '%' : '–') + '</b></li>';
+    }).join('');
+  }
+  var WORK_ORDER = ['intro', 'dev', 'conc', 'rep', 'virgula'];
+  function openWrite() {
+    $('wpart').innerHTML = WORK_ORDER.map(function (k) { return '<option value="' + k + '">' + esc(PW[k].name) + '</option>'; }).join('');
+    $('wtheme').innerHTML = THEMES.map(function (t, i) { return '<option value="' + i + '">' + (i + 1) + '. ' + esc(t) + '</option>'; }).join('');
+    $('wpart').value = PW[save.part] ? save.part : 'intro';
+    $('wtheme').value = save.theme || 0;
+    $('wtext').value = save.drafts[$('wpart').value] || '';
+    $('wmsg').textContent = '';
+    renderWrite(); renderHist(); show('write');
   }
 
   /* ---------- eventos ---------- */
@@ -1417,37 +1540,42 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
   document.addEventListener('keydown', function (e) {
     if (phase !== 'ask' || scr !== 'battle') return;
     var tag = e.target && e.target.tagName;
+    if (q.kind === 'write') { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); submit(false); } return; }
     if (e.key === 'Enter') { e.preventDefault(); submit(false); }
     else if (q.kind === 'choice' && /^[1-9]$/.test(e.key) && tag !== 'TEXTAREA') {
       var b = $('qbox').querySelectorAll('.opt')[+e.key - 1];
       if (b) b.click();
     }
   });
-  $('wtheme').addEventListener('change', function () { save.theme = +$('wtheme').value; persist(); });
-  $('wrand').addEventListener('click', function () { var i = rint(THEMES.length); $('wtheme').value = i; save.theme = i; persist(); });
-  $('wtext').addEventListener('input', function () { save.draft = $('wtext').value; persist(); renderWrite(); });
-  $('wcheck').addEventListener('change', function (e) {
-    if (e.target && e.target.id === 'wrep') { save.repOk = e.target.checked; persist(); renderWrite(); }
+  $('wtheme').addEventListener('change', function () { save.theme = +$('wtheme').value; persist(); renderWrite(); });
+  $('wpart').addEventListener('change', function () {
+    save.part = $('wpart').value; persist();
+    $('wtext').value = save.drafts[save.part] || '';
+    $('wmsg').textContent = ''; renderWrite();
   });
+  $('wrand').addEventListener('click', function () { var i = rint(THEMES.length); $('wtheme').value = i; save.theme = i; persist(); renderWrite(); });
+  $('wtext').addEventListener('input', function () { save.drafts[$('wpart').value] = $('wtext').value; persist(); renderWrite(); });
   $('wclear').addEventListener('click', function () {
-    if ($('wtext').value.trim() && !window.confirm('Apagar o texto da redação?')) return;
-    $('wtext').value = ''; save.draft = ''; save.repOk = false; persist(); renderWrite();
+    if ($('wtext').value.trim() && !window.confirm('Apagar o texto deste parágrafo?')) return;
+    $('wtext').value = ''; save.drafts[$('wpart').value] = ''; persist(); renderWrite();
   });
   $('wback').addEventListener('click', toMenu);
   $('wcopy').addEventListener('click', function () {
-    if ($('wtext').value.trim().length < 50) { $('wmsg').textContent = 'Escreva a redação antes de copiar o pedido.'; return; }
-    copyText(buildPrompt()).then(function () {
-      $('wmsg').textContent = 'Pedido copiado. Cole no Claude para receber a correção com nota de C1 a C5.';
+    var text = $('wtext').value, part = $('wpart').value, theme = +$('wtheme').value;
+    if (text.trim().length < 30) { $('wmsg').textContent = 'Escreva o parágrafo antes de copiar o pedido.'; return; }
+    var r = evalPart(text, part, theme), bonus = r.score === 1 && save.lastReward !== text;
+    copyText(buildPartPrompt(part, theme, text)).then(function () {
+      if (bonus) { save.lastReward = text; save.coins += 20; persist(); updHud(); }
+      $('wmsg').textContent = 'Pedido copiado. Cole no Claude para receber a correção.' + (bonus ? ' Parágrafo perfeito no checklist: +20 moedas.' : '');
     }, function () {
-      $('wmsg').textContent = 'Não consegui copiar sozinho. Selecione o texto da redação e copie manualmente.';
+      $('wmsg').textContent = 'Não consegui copiar sozinho. Selecione o texto e copie manualmente.';
     });
   });
-  $('wsave').addEventListener('click', function () {
-    var v = parseInt($('wnote').value, 10);
-    if (isNaN(v) || v < 0 || v > 1000) { $('wmsg').textContent = 'Digite uma nota de 0 a 1000.'; return; }
-    save.essays.push({ date: new Date().toLocaleDateString('pt-BR'), theme: +$('wtheme').value, score: v });
-    save.coins += 60; persist(); $('wnote').value = '';
-    $('wmsg').textContent = 'Nota registrada. +60 moedas para a loja.'; sfx.buy(); renderHist(); updHud();
+  $('qbox').addEventListener('input', function (e) { if (e.target && e.target.id === 'wduel') updDuel(); });
+  $('fb').addEventListener('click', function (e) {
+    var b = e.target.closest('#bcopyduel');
+    if (!b || !q || q.kind !== 'write') return;
+    copyText(buildPartPrompt(q.part, q.theme, q.lastText || '')).then(function () { b.textContent = 'Pedido copiado!'; }, function () { b.textContent = 'Não consegui copiar'; });
   });
 
   /* ---------- desenho ---------- */
