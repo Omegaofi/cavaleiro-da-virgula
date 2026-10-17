@@ -251,6 +251,7 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
         </div>
       </fieldset>
       <div class="actions">
+        <button class="btn" id="mmem" type="button">Memorizar referências</button>
         <button class="btn" id="mcori" type="button">Cofre de coringas</button>
         <button class="btn" id="mplan" type="button">Treino personalizado</button>
         <button class="btn" id="mwrite" type="button">Oficina de parágrafos</button>
@@ -298,6 +299,19 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
         <button class="btn" id="shgo" type="button">Continuar</button>
         <button class="btn ghost" id="shmenu" type="button">Mapa</button>
       </div>
+    </section>
+
+    <section class="panel" id="sc-mem" hidden>
+      <h2>Memorizar referências</h2>
+      <p class="lead">Cartões para guardar na cabeça as referências que servem de coringa na redação. Você lê um cartão novo, tenta lembrar sem olhar e se avalia. O jogo repete cada cartão em 1, 3, 7, 15 e 30 dias, até virar memória. São até 5 cartões novos por dia.</p>
+      <dl class="facts" id="memprog"></dl>
+      <div class="actions" id="memactions">
+        <button class="btn" id="memstart" type="button">Começar sessão</button>
+        <button class="btn ghost" id="memmap" type="button">Referências por tema</button>
+        <button class="btn ghost" id="memback" type="button">Mapa</button>
+      </div>
+      <p class="hint" id="memmsg" role="status"></p>
+      <div id="memview" hidden></div>
     </section>
 
     <section class="panel" id="sc-cori" hidden>
@@ -896,6 +910,147 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
       conecta: { 5: 'Dessa forma, instituições como o IFSul aproximam o jovem do mercado de trabalho e impulsionam o desenvolvimento de cada região.',
                  3: 'Nesse sentido, a expansão dos institutos pelo interior leva formação tecnológica ao interior e reduz a desigualdade de acesso entre as regiões.' },
       palavras: ['11.892', 'Institutos Federais'], ideia: ['institutos', 'profissional', 'tecnológic', 'desenvolvimento'] },
+    /* ---------- mais referências para memorizar ---------- */
+    { id: 'kant', tipo: 'Pensador', titulo: 'O que é esclarecimento?', fonte: 'Immanuel Kant, 1784',
+      apresenta: 'No texto Resposta à pergunta: o que é esclarecimento?, publicado por Immanuel Kant em 1784, o filósofo defende o lema “ouse saber”.',
+      explica: 'Para ele, a menoridade é não usar o próprio entendimento sem a direção de outra pessoa, e sair dela exige coragem para pensar por conta própria.',
+      conecta: { 0: 'Nesse sentido, quem entrega à inteligência artificial todas as respostas permanece na menoridade descrita por Kant e abre mão de pensar por conta própria.',
+                 1: 'Da mesma forma, quem repassa notícias falsas sem checar a informação deixa de usar o próprio entendimento.' },
+      palavras: ['Kant', 'esclarecimento', 'Sapere aude'], ideia: ['entendimento', 'menoridade', 'ouse', 'coragem', 'por conta própria'] },
+    { id: 'arendt', tipo: 'Pensador', titulo: 'Banalidade do mal', fonte: 'Hannah Arendt, 1963',
+      apresenta: 'No livro Eichmann em Jerusalém, publicado por Hannah Arendt em 1963, a filósofa analisa o julgamento de um oficial nazista e cunha a expressão “banalidade do mal”.',
+      explica: 'Segundo ela, o mal pode ser cometido por pessoas comuns que deixam de pensar e apenas cumprem ordens, sem refletir sobre as consequências.',
+      conecta: { 0: 'Analogamente, aceitar as respostas da inteligência artificial sem refletir é uma forma de deixar de pensar, o que empobrece o senso crítico dos estudantes.',
+                 1: 'Da mesma forma, compartilhar boatos sem pensar nas consequências transforma pessoas comuns em agentes da desinformação.' },
+      palavras: ['Arendt', 'banalidade do mal', 'Eichmann'], ideia: ['pensar', 'refletir', 'ordens', 'pessoas comuns'] },
+    { id: 'mcluhan', tipo: 'Pensador', titulo: 'O meio é a mensagem', fonte: 'Marshall McLuhan, 1964',
+      apresenta: 'No livro Os Meios de Comunicação como Extensões do Homem, publicado por Marshall McLuhan em 1964, o autor afirma que “o meio é a mensagem”.',
+      explica: 'Para ele, cada tecnologia de comunicação transforma a forma como as pessoas pensam e se relacionam, independentemente do conteúdo que transmite.',
+      conecta: { 4: 'Nesse sentido, as telas e as notificações moldam a atenção dos jovens, e não apenas o conteúdo que exibem, o que ajuda a explicar a queda da concentração.',
+                 0: 'Da mesma forma, a inteligência artificial transforma o modo como os estudantes pesquisam e pensam, e não apenas as ferramentas que usam.' },
+      palavras: ['McLuhan', 'o meio é a mensagem'], ideia: ['tecnologia', 'transforma', 'pensam', 'mensagem', 'meio'] },
+    { id: 'postman', tipo: 'Pensador', titulo: 'Amusing Ourselves to Death', fonte: 'Neil Postman, 1985',
+      apresenta: 'No livro Amusing Ourselves to Death, publicado por Neil Postman em 1985, o autor compara os temores de Orwell e de Huxley.',
+      explica: 'Segundo ele, a sociedade corre o risco de ser dominada não pela censura, mas pelo excesso de entretenimento, que torna as pessoas passivas e distraídas.',
+      conecta: { 4: 'Dessa forma, o excesso de telas e de entretenimento rápido reduz a concentração e o interesse dos jovens pela leitura.',
+                 1: 'Nesse sentido, o excesso de informação e de entretenimento nas redes dificulta que o cidadão distinga o que é verdadeiro.' },
+      palavras: ['Postman', 'Amusing Ourselves to Death'], ideia: ['entretenimento', 'passiv', 'distra', 'Huxley', 'Orwell'] },
+    { id: 'pariser', tipo: 'Pensador', titulo: 'O Filtro Invisível', fonte: 'Eli Pariser, 2011',
+      apresenta: 'No livro O Filtro Invisível, publicado por Eli Pariser em 2011, o autor apresenta o conceito de bolha de filtro.',
+      explica: 'Segundo ele, os algoritmos mostram a cada pessoa conteúdos parecidos com o que ela já pensa, o que isola o usuário de ideias diferentes.',
+      conecta: { 1: 'Da mesma forma, as notícias falsas circulam com facilidade em bolhas de filtro, nas quais o usuário raramente encontra informações que contradigam suas crenças.',
+                 2: 'Nesse sentido, a bolha de filtro mantém os jovens presos a conteúdos que reforçam a comparação e a insegurança nas redes sociais.' },
+      palavras: ['Pariser', 'Filtro Invisível', 'bolha de filtro'], ideia: ['algoritmo', 'bolha', 'isola', 'ideias diferentes'] },
+    { id: 'dilema', tipo: 'Filme', titulo: 'O Dilema das Redes', fonte: 'Jeff Orlowski, 2020',
+      apresenta: 'O documentário O Dilema das Redes, dirigido por Jeff Orlowski e lançado pela Netflix em 2020, reúne ex-funcionários de grandes empresas de tecnologia.',
+      explica: 'Eles explicam que as plataformas lucram com a atenção dos usuários e usam algoritmos para mantê-los conectados pelo maior tempo possível.',
+      conecta: { 2: 'Nesse sentido, o modelo de negócio das redes sociais estimula o uso excessivo, o que contribui para a ansiedade e o isolamento dos jovens.',
+                 4: 'Dessa forma, os algoritmos que disputam a atenção dos usuários favorecem o vício em telas e reduzem a concentração.',
+                 1: 'Da mesma forma, os algoritmos que priorizam o engajamento ajudam a espalhar notícias falsas e desinformação.' },
+      palavras: ['Dilema das Redes', 'Orlowski'], ideia: ['atenção', 'algoritmos', 'lucram', 'engajamento'],
+      aviso: 'As plataformas contestaram o filme. Use-o para ilustrar o debate, e não como prova científica.' },
+    { id: 'turkle', tipo: 'Pensador', titulo: 'Alone Together', fonte: 'Sherry Turkle, 2011',
+      apresenta: 'No livro Alone Together, publicado pela psicóloga Sherry Turkle em 2011, a autora analisa como a tecnologia muda as relações humanas.',
+      explica: 'Segundo ela, as pessoas estão cada vez mais conectadas, mas se sentem mais sozinhas, pois trocam conversas profundas por interações rápidas.',
+      conecta: { 2: 'Nesse sentido, a conexão constante das redes sociais pode aumentar o isolamento e a ansiedade dos jovens, em vez de reduzi-los.',
+                 4: 'Da mesma forma, a atenção dividida entre o celular e as pessoas reduz a qualidade das relações e da concentração.' },
+      palavras: ['Turkle', 'Alone Together'], ideia: ['sozinh', 'conectad', 'solidão', 'interações'] },
+    { id: 'zuboff', tipo: 'Pensador', titulo: 'A Era do Capitalismo de Vigilância', fonte: 'Shoshana Zuboff, 2019',
+      apresenta: 'No livro A Era do Capitalismo de Vigilância, publicado por Shoshana Zuboff em 2019, a autora descreve como empresas transformam dados pessoais em lucro.',
+      explica: 'Segundo ela, os dados dos usuários são usados para prever e influenciar comportamentos, muitas vezes sem que as pessoas percebam.',
+      conecta: { 0: 'Nesse sentido, o uso da inteligência artificial nas escolas exige cuidado com os dados dos estudantes, que podem ser usados para influenciar escolhas.',
+                 1: 'Da mesma forma, a coleta de dados permite direcionar conteúdos e desinformação a cada usuário, o que manipula a opinião pública.' },
+      palavras: ['Zuboff', 'Capitalismo de Vigilância'], ideia: ['dados', 'prever', 'influenciar', 'lucro'] },
+    { id: 'alienista', tipo: 'Livro', titulo: 'O Alienista', fonte: 'Machado de Assis, 1882',
+      apresenta: 'Na obra O Alienista, publicada por Machado de Assis em 1882, o médico Simão Bacamarte interna os moradores de Itaguaí que considera loucos.',
+      explica: 'Aos poucos, ele amplia tanto o critério de loucura que quase toda a cidade é internada, e o enredo questiona quem define o que é normal.',
+      conecta: { 2: 'Dessa forma, a obra mostra que rotular o sofrimento mental sem escuta e sem cuidado agrava o problema, algo que ainda ameaça a saúde mental dos jovens.' },
+      palavras: ['O Alienista', 'Machado de Assis', 'Bacamarte'], ideia: ['loucura', 'internad', 'normal', 'Itaguaí'] },
+    { id: 'vidassecas', tipo: 'Livro', titulo: 'Vidas Secas', fonte: 'Graciliano Ramos, 1938',
+      apresenta: 'No livro Vidas Secas, publicado por Graciliano Ramos em 1938, uma família de retirantes enfrenta a seca e a miséria no sertão nordestino.',
+      explica: 'Na obra, os personagens, como Fabiano e Sinhá Vitória, têm pouco acesso à educação e a direitos básicos, o que perpetua sua condição de pobreza.',
+      conecta: { 3: 'Da mesma forma, a desigualdade no acesso à tecnologia mantém milhões de brasileiros longe das oportunidades de estudo e de trabalho.',
+                 5: 'Nesse sentido, a educação técnica pode oferecer a jovens de baixa renda uma chance real de qualificação e de ascensão profissional.' },
+      palavras: ['Vidas Secas', 'Graciliano'], ideia: ['seca', 'miséria', 'retirantes', 'pobreza', 'sertão'] },
+    { id: 'quartodespejo', tipo: 'Livro', titulo: 'Quarto de Despejo', fonte: 'Carolina Maria de Jesus, 1960',
+      apresenta: 'No livro Quarto de Despejo, publicado por Carolina Maria de Jesus em 1960, a autora registra em diário a vida na favela do Canindé, em São Paulo.',
+      explica: 'Na obra, ela relata a fome e a exclusão, mas também mostra o valor da leitura e da escrita como forma de resistir.',
+      conecta: { 3: 'Nesse sentido, o acesso desigual à tecnologia e à informação repete a exclusão descrita pela autora e limita as chances de ascensão dos mais pobres.',
+                 5: 'Dessa forma, a educação e a formação profissional ainda são caminhos para romper o ciclo de exclusão retratado na obra.' },
+      palavras: ['Quarto de Despejo', 'Carolina Maria de Jesus'], ideia: ['fome', 'favela', 'diário', 'exclusão', 'leitura'] },
+    { id: 'ilhaflores', tipo: 'Filme', titulo: 'Ilha das Flores', fonte: 'Jorge Furtado, 1989',
+      apresenta: 'No curta-metragem Ilha das Flores, dirigido pelo gaúcho Jorge Furtado em 1989, a trajetória de um tomate mostra como o dinheiro organiza a sociedade.',
+      explica: 'O filme revela que pessoas pobres disputam, com os porcos, os restos de comida que sobram, o que denuncia a desigualdade social no país.',
+      conecta: { 3: 'Analogamente, a falta de acesso à tecnologia e à internet reproduz essa desigualdade e deixa parte da população sem as mesmas oportunidades.' },
+      palavras: ['Ilha das Flores', 'Furtado'], ideia: ['tomate', 'porcos', 'pobres', 'desigualdade', 'dinheiro'] },
+    { id: 'temposmodernos', tipo: 'Filme', titulo: 'Tempos Modernos', fonte: 'Charles Chaplin, 1936',
+      apresenta: 'No filme Tempos Modernos, lançado por Charles Chaplin em 1936, um operário é engolido pelo ritmo das máquinas na linha de produção.',
+      explica: 'A obra critica a industrialização que transforma o trabalhador em peça de engrenagem, sem tempo para pensar.',
+      conecta: { 0: 'Da mesma forma, a automação e a inteligência artificial exigem que a escola prepare os estudantes para pensar criticamente, e não apenas para operar máquinas.',
+                 5: 'Nesse sentido, a educação técnica precisa formar profissionais capazes de compreender a tecnologia, e não só de repetir tarefas.' },
+      palavras: ['Tempos Modernos', 'Chaplin'], ideia: ['máquinas', 'operário', 'industrializa', 'produção', 'engrenagem'] },
+    { id: 'estrelas', tipo: 'Filme', titulo: 'Estrelas Além do Tempo', fonte: 'Theodore Melfi, 2016',
+      apresenta: 'No filme Estrelas Além do Tempo, lançado em 2016 e dirigido por Theodore Melfi, três mulheres negras enfrentam o preconceito para trabalhar como matemáticas na NASA.',
+      explica: 'A história mostra que a formação técnica e o conhecimento abrem portas, mesmo em um ambiente marcado por segregação.',
+      conecta: { 5: 'Dessa forma, a valorização da educação técnica e tecnológica amplia as oportunidades e permite que talentos superem barreiras sociais.',
+                 3: 'Nesse sentido, ampliar o acesso à educação e à tecnologia é essencial para que o talento não seja barrado pela desigualdade.' },
+      palavras: ['Estrelas Além do Tempo', 'Melfi', 'Hidden Figures'], ideia: ['NASA', 'matemáticas', 'preconceito', 'segregação'] },
+    { id: 'ods4', tipo: 'Pesquisa', titulo: 'Agenda 2030 (ODS 4)', fonte: 'ONU, 2015',
+      apresenta: 'A Agenda 2030, aprovada pela ONU em 2015, reúne 17 Objetivos de Desenvolvimento Sustentável, e o quarto trata da educação de qualidade.',
+      explica: 'O ODS 4 propõe assegurar educação inclusiva e equitativa para todos, o que inclui ampliar o acesso à educação técnica e profissional.',
+      conecta: { 3: 'Nesse sentido, reduzir a desigualdade no acesso à tecnologia ajuda o Brasil a cumprir o compromisso de oferecer educação inclusiva e de qualidade.',
+                 5: 'Dessa forma, valorizar a educação técnica e a formação profissional contribui diretamente para as metas do ODS 4.',
+                 0: 'Assim, a inteligência artificial deve ser usada na escola de modo a ampliar, e não restringir, a educação inclusiva.' },
+      palavras: ['Agenda 2030', 'ODS', 'ONU'], ideia: ['educação de qualidade', 'inclusiva', 'equitativa', 'todos'] },
+    { id: 'oms', tipo: 'Pesquisa', titulo: 'Definição de saúde da OMS', fonte: 'OMS, 1946',
+      apresenta: 'A Constituição da Organização Mundial da Saúde, de 1946, define saúde como um estado de completo bem-estar físico, mental e social.',
+      explica: 'Por essa definição, a saúde não é apenas a ausência de doença, e o cuidado com a saúde mental faz parte do direito à saúde.',
+      conecta: { 2: 'Nesse sentido, o impacto das redes sociais sobre a ansiedade dos jovens deve ser tratado como questão de saúde pública, e não como mero problema individual.',
+                 4: 'Da mesma forma, o vício em telas afeta o bem-estar mental e social e, por isso, exige políticas de prevenção.' },
+      palavras: ['OMS', 'Organização Mundial da Saúde'], ideia: ['bem-estar', 'mental', 'ausência de doença', 'completo'] },
+    { id: 'cf6', tipo: 'Lei', titulo: 'Constituição Federal, art. 6º', fonte: 'Constituição Federal, 1988',
+      apresenta: 'O artigo 6º da Constituição Federal de 1988 inclui a educação e a saúde entre os direitos sociais dos brasileiros.',
+      explica: 'Isso significa que o Estado tem o dever de garantir o acesso a esses direitos a todos os cidadãos.',
+      conecta: { 2: 'Nesse sentido, cuidar da saúde mental dos jovens é uma forma de cumprir esse direito social e exige políticas públicas voltadas às redes sociais.',
+                 3: 'Dessa forma, o acesso desigual à tecnologia compromete o direito à educação e aprofunda a desigualdade no país.' },
+      palavras: ['artigo 6', 'art. 6', 'Constituição'], ideia: ['direitos sociais', 'educação', 'saúde', 'Estado'] },
+    { id: 'marcocivil', tipo: 'Lei', titulo: 'Marco Civil da Internet', fonte: 'Lei nº 12.965, 2014',
+      apresenta: 'A Lei 12.965, de 2014, conhecida como Marco Civil da Internet, estabelece princípios, direitos e deveres para o uso da internet no Brasil.',
+      explica: 'A norma afirma que o acesso à internet é essencial ao exercício da cidadania e garante direitos como a liberdade de expressão e a privacidade.',
+      conecta: { 3: 'Nesse sentido, a desigualdade no acesso à internet contraria a lei, pois impede que parte da população exerça plenamente a cidadania.',
+                 1: 'Dessa forma, o combate às fake news deve respeitar a liberdade de expressão e, ao mesmo tempo, responsabilizar quem divulga informações falsas.' },
+      palavras: ['Marco Civil', '12.965'], ideia: ['internet', 'cidadania', 'direitos', 'privacidade', 'liberdade de expressão'] },
+    { id: 'lgpd', tipo: 'Lei', titulo: 'LGPD', fonte: 'Lei nº 13.709, 2018',
+      apresenta: 'A Lei Geral de Proteção de Dados, de 2018, regula como empresas e órgãos públicos podem coletar e usar os dados pessoais dos brasileiros.',
+      explica: 'A norma busca proteger a privacidade e dar ao cidadão controle sobre suas informações, o que inclui os dados de crianças e adolescentes.',
+      conecta: { 0: 'Nesse sentido, o uso da inteligência artificial nas escolas deve seguir a lei e proteger os dados pessoais dos estudantes.',
+                 4: 'Da mesma forma, a coleta de dados por aplicativos e redes sociais que disputam a atenção dos jovens precisa de limites legais.' },
+      palavras: ['LGPD', '13.709', 'Proteção de Dados'], ideia: ['dados', 'privacidade', 'proteger', 'controle'] },
+    { id: 'eca', tipo: 'Lei', titulo: 'Estatuto da Criança e do Adolescente', fonte: 'Lei nº 8.069, 1990',
+      apresenta: 'O Estatuto da Criança e do Adolescente, de 1990, estabelece que crianças e adolescentes têm direito à proteção integral.',
+      explica: 'A lei determina que família, sociedade e Estado devem garantir direitos como saúde, educação e convivência, com prioridade absoluta.',
+      conecta: { 2: 'Nesse sentido, proteger a saúde mental dos adolescentes diante dos riscos das redes sociais é um dever previsto na lei.',
+                 4: 'Dessa forma, limitar o excesso de telas na infância e na adolescência é coerente com o princípio da proteção integral.' },
+      palavras: ['Estatuto da Criança', 'ECA', '8.069'], ideia: ['proteção integral', 'prioridade absoluta', 'crianças', 'adolescentes', 'direitos'] },
+    { id: 'miltonsantos', tipo: 'Pensador', titulo: 'Por uma outra globalização', fonte: 'Milton Santos, 2000',
+      apresenta: 'No livro Por uma outra globalização, publicado por Milton Santos em 2000, o geógrafo critica a chamada tirania da informação e do dinheiro.',
+      explica: 'Segundo ele, a informação é controlada por poucos atores globais, o que aprofunda as desigualdades e confunde as mentes das pessoas.',
+      conecta: { 1: 'Nesse sentido, a desinformação e as fake news ilustram a tirania da informação, pois poucos agentes controlam o que milhões de pessoas veem.',
+                 3: 'Da mesma forma, a desigualdade no acesso à tecnologia concentra o poder da informação nas mãos de poucos e amplia a exclusão digital.' },
+      palavras: ['Milton Santos', 'outra globalização'], ideia: ['tirania', 'informação', 'poucos', 'dinheiro', 'desigualdades'],
+      aviso: 'Confira a edição e o ano antes de citar a data na prova.' },
+    { id: 'pronatec', tipo: 'Lei', titulo: 'Pronatec', fonte: 'Lei nº 12.513, 2011',
+      apresenta: 'A Lei 12.513, de 2011, criou o Pronatec, programa federal para ampliar a oferta de educação profissional e tecnológica.',
+      explica: 'O programa prioriza estudantes do ensino médio público e trabalhadores, e busca ampliar o acesso aos cursos técnicos.',
+      conecta: { 5: 'Dessa forma, o Pronatec mostra que o Estado já reconhece a educação técnica como caminho para qualificar o jovem e aproximá-lo do mercado de trabalho.',
+                 3: 'Nesse sentido, ampliar cursos técnicos e tecnológicos nas regiões mais pobres ajuda a reduzir a desigualdade de acesso à formação.' },
+      palavras: ['Pronatec', '12.513'], ideia: ['educação profissional', 'cursos técnicos', 'trabalhadores', 'ensino médio'] },
+    { id: 'her', tipo: 'Filme', titulo: 'Her', fonte: 'Spike Jonze, 2013',
+      apresenta: 'O filme Her, dirigido por Spike Jonze e lançado em 2013, retrata um homem que se apaixona por um sistema operacional.',
+      explica: 'Na história, o personagem substitui as relações humanas pela conversa com a máquina e se isola cada vez mais.',
+      conecta: { 2: 'De modo semelhante, o uso excessivo das redes sociais afasta os jovens do convívio real e agrava problemas como a ansiedade.',
+                 0: 'Da mesma forma, a relação de dependência com a inteligência artificial pode afastar o estudante do convívio e do pensamento próprio.' },
+      palavras: ['Her', 'Spike Jonze'], ideia: ['sistema operacional', 'isola', 'máquina', 'relações'] },
     /* ---------- técnicas coringa por parte da redação (conecta: tema -> parágrafo-modelo completo) ---------- */
     { id: 't-intro-hist', tipo: 'Técnica', parte: 'intro', titulo: 'Abertura histórica', fonte: 'Introdução',
       apresenta: 'Comece situando o tema no tempo, com expressões como “Desde”, “Ao longo dos anos” ou “Com o advento de”.',
@@ -1004,7 +1159,7 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
   /* ---------- salvamento ---------- */
   var KEY = 'cavaleiro-virgula-v2', OLD_KEY = 'cavaleiro-virgula-v1';
   function loadSave() {
-    var d = { coins: 0, lv: { sword: 0, armor: 0, helm: 0, clock: 0, luck: 0 }, realms: {}, miss: {}, hits: 0, tries: 0, mode: 'mixed', sound: true, cape: 0, last: 0, essays: [], draft: '', theme: 0, repOk: false, part: 'intro', drafts: {}, pbest: {}, lastReward: '', plan: null, cori: { st: {}, custom: [] } };
+    var d = { coins: 0, lv: { sword: 0, armor: 0, helm: 0, clock: 0, luck: 0 }, realms: {}, miss: {}, hits: 0, tries: 0, mode: 'mixed', sound: true, cape: 0, last: 0, essays: [], draft: '', theme: 0, repOk: false, part: 'intro', drafts: {}, pbest: {}, lastReward: '', plan: null, cori: { st: {}, custom: [] }, mem: { st: {}, day: '', newN: 0 } };
     try {
       var r = JSON.parse(localStorage.getItem(KEY) || 'null'), j, k;
       if (r) {
@@ -1025,6 +1180,7 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
   }
   var save = loadSave();
   save.cori = save.cori || {}; save.cori.st = save.cori.st || {}; save.cori.custom = save.cori.custom || [];
+  save.mem = save.mem || {}; save.mem.st = save.mem.st || {}; save.mem.day = save.mem.day || ''; save.mem.newN = save.mem.newN || 0;
   function persist() { try { localStorage.setItem(KEY, JSON.stringify(save)); } catch (e) { /* ignora */ } }
   function maxHp() { return 100 + 25 * save.lv.armor; }
   function realmBest(i) { return (save.realms[REALMS[i].id] || {}).best || 0; }
@@ -1068,7 +1224,7 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
 
   function show(name) {
     scr = name;
-    ['menu', 'battle', 'shop', 'write', 'plan', 'cori'].forEach(function (n) { $('sc-' + n).hidden = n !== name; });
+    ['menu', 'battle', 'shop', 'write', 'plan', 'cori', 'mem'].forEach(function (n) { $('sc-' + n).hidden = n !== name; });
     $('bars').hidden = name !== 'battle';
     updHud();
   }
@@ -1574,7 +1730,7 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
   var GEN_AG = /\b(o governo|a sociedade|todos nós|as autoridades|o estado)\b/i;
   var TOPIC_RE = /^(Em primeiro lugar|Em primeiro plano|Primeiramente|Em segundo lugar|Em segundo plano|Inicialmente|Ademais|Além disso|Nesse sentido|Nesse contexto|Por outro lado|Outrossim|Sobretudo|Dessa forma|Também|Por fim),/;
   var CONCL_RE = /^(Portanto|Em suma|Em síntese|Em conclusão|Logo|Dessa forma|Dessa maneira|Assim|Por fim|Diante disso|Nesse sentido),/;
-  var REPCUE_RE = /\b(filme|livro|obra|lei|artigo|Constituição|norma|série|animação|romance|pesquisa|segundo|de acordo com|filósofo|revista|IBGE|UNESCO|Orwell|Matrix|Wall-E|Platão|Tolkien|Bauman|dados|estudo|relatório)\b/i;
+  var REPCUE_RE = /\b(filme|livro|obra|documentário|curta|ensaio|conceito|agenda|programa|ONU|OMS|lei|artigo|Constituição|norma|série|animação|romance|pesquisa|segundo|de acordo com|filósofo|revista|IBGE|UNESCO|Orwell|Matrix|Wall-E|Platão|Tolkien|Bauman|dados|estudo|relatório)\b/i;
   var EXPL_RE = /\b(mostra|mostram|retrata|retratam|apresenta|apresentam|revela|revelam|narra|conta|trama|história|nela|nele|na obra|no filme|no livro|na animação|os dados|a pesquisa|o estudo)\b/i;
   var LINK_RE = /(Da mesma forma|Da mesma maneira|Do mesmo modo|De modo semelhante|Assim como|Analogamente|Dessa forma|Dessa maneira|Logo|Portanto|Nesse sentido|Semelhantemente|Por isso|Assim,)/i;
   var ACAO_RE = /\b(deve|devem|precisa|precisam|cabe|é necessário|é fundamental)\b/i;
@@ -2147,6 +2303,118 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
     }
   }
 
+  /* ---------- memorizar referências: cartões com revisão espaçada (1, 3, 7, 15 e 30 dias) ---------- */
+  var MEMBOX = [0, 1, 3, 7, 15, 30], MEM_NEW = 5, mv = null;
+  function memAll() { return coriAll().filter(function (c) { return !c.parte; }); }
+  function memCard(id) { return memAll().filter(function (c) { return c.id === id; })[0]; }
+  function memToday() { var d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); }
+  function memDay() { if (save.mem.day !== memToday()) { save.mem.day = memToday(); save.mem.newN = 0; persist(); } }
+  function memStats() {
+    memDay();
+    var all = memAll(), st = save.mem.st, known = 0, due = 0, fresh = 0;
+    all.forEach(function (c) { var s = st[c.id]; if (!s) fresh++; else { if (s.box >= 3) known++; if (s.due <= Date.now()) due++; } });
+    return { total: all.length, known: known, due: due, fresh: fresh, left: Math.max(0, MEM_NEW - save.mem.newN) };
+  }
+  function renderMemFacts() {
+    var s = memStats();
+    $('memprog').innerHTML = '<div><dt>Memorizadas</dt><dd>' + s.known + '/' + s.total + '</dd></div><div><dt>Para revisar hoje</dt><dd>' + s.due + '</dd></div><div><dt>Novas hoje</dt><dd>' + (MEM_NEW - s.left) + '/' + MEM_NEW + '</dd></div>';
+    $('memstart').textContent = 'Começar sessão (' + (s.due + Math.min(s.left, s.fresh)) + ' cartões)';
+  }
+  function memBuild() {
+    memDay();
+    var all = memAll(), st = save.mem.st, q = [];
+    shuffle(all.filter(function (c) { return st[c.id] && st[c.id].due <= Date.now(); })).forEach(function (c) { q.push({ id: c.id, k: 'recall' }); });
+    shuffle(all.filter(function (c) { return !st[c.id]; })).slice(0, Math.max(0, MEM_NEW - save.mem.newN)).forEach(function (c) { q.push({ id: c.id, k: 'learn' }); });
+    shuffle(all.filter(function (c) { return st[c.id]; })).slice(0, 3).forEach(function (c) { q.push({ id: c.id, k: 'reverse', tema: shuffle(c.temas)[0] }); });
+    return q;
+  }
+  function memTemas(c) {
+    return '<ul>' + c.temas.map(function (t) { return '<li><b>' + esc(THEMES[t]) + ':</b> ' + esc(c.conecta[t]) + '</li>'; }).join('') + '</ul>';
+  }
+  function memBack(c) {
+    return '<p class="hint">' + esc(c.tipo) + ' · ' + esc(c.fonte) + '</p><p>' + esc(c.apresenta) + '</p><p>' + esc(c.explica) + '</p><p><b>Serve para estes temas:</b></p>' + memTemas(c) +
+      (c.aviso ? '<p class="weak"><b>Cuidado:</b> ' + esc(c.aviso) + '</p>' : '');
+  }
+  function renderMem() {
+    var el = $('memview'), h = '', it, c;
+    $('memactions').hidden = !!mv;
+    if (!mv) { el.hidden = true; renderMemFacts(); return; }
+    el.hidden = false;
+    if (mv.view === 'map') {
+      var t = mv.tema, list = memAll().filter(function (x) { return x.temas.indexOf(t) >= 0; });
+      h = '<h3>Referências por tema</h3><label class="fld">Tema <select id="memtsel">' + THEMES.map(function (n, i) { return '<option value="' + i + '"' + (i === t ? ' selected' : '') + '>' + (i + 1) + '. ' + esc(n) + '</option>'; }).join('') + '</select></label>' +
+        '<p class="hint">' + list.length + ' referências servem para este tema. Memorize pelo menos duas por tema, para sempre ter uma de reserva na prova.</p>' +
+        list.map(function (x) {
+          var s = save.mem.st[x.id], tag = !s ? 'ainda não estudada' : s.box >= 3 ? 'memorizada' : 'em estudo';
+          return '<div class="scroll plain"><p><b>' + esc(x.titulo) + '</b> <span class="hint">' + esc(x.tipo) + ' · ' + esc(x.fonte) + ' · ' + tag + '</span></p><p>' + esc(x.apresenta) + '</p><p><b>Como conectar:</b> ' + esc(x.conecta[t]) + '</p></div>';
+        }).join('') + '<div class="actions"><button class="btn ghost" id="mem-exit" type="button">Voltar</button></div>';
+    } else if (mv.done) {
+      h = '<h3>Sessão concluída!</h3><p>Lembrei: <b>' + mv.res.l + '</b> · Quase: <b>' + mv.res.q + '</b> · Esqueci: <b>' + mv.res.e + '</b>' + (mv.res.coins ? ' · +' + mv.res.coins + ' moedas' : '') + '.</p>' +
+        '<p class="hint">Os cartões que você esqueceu voltam amanhã. Os que você lembrou voltam em 1, 3, 7, 15 e 30 dias, conforme a caixa.</p><div class="actions"><button class="btn" id="mem-exit" type="button">Voltar</button></div>';
+    } else {
+      it = mv.q[0]; c = memCard(it.id);
+      var left = mv.q.length;
+      if (it.k === 'learn') {
+        h = '<p class="hint">Cartão novo · restam ' + left + '</p><div class="scroll plain"><h3>' + esc(c.titulo) + '</h3>' + memBack(c) + '</div>' +
+          '<p class="hint">Leia duas vezes e repare em quem criou, quando e o que defende. Depois você será testado.</p><div class="actions"><button class="btn" id="mem-got" type="button">Entendi, vou me testar</button><button class="btn ghost" id="mem-exit" type="button">Sair</button></div>';
+      } else if (it.k === 'recall') {
+        h = '<p class="hint">' + (it.retry ? 'Mais uma tentativa' : 'Revisão') + ' · restam ' + left + '</p><div class="scroll plain"><h3>' + esc(c.titulo) + '</h3>' +
+          (mv.flip ? memBack(c) : '<p class="hint">' + esc(c.tipo) + '</p><p>Tente lembrar, sem olhar: quem criou, quando, o que defende e a que temas serve.</p>') + '</div>' +
+          (mv.flip ? '<div class="actions"><button class="btn ghost" id="mem-f" type="button">Esqueci</button><button class="btn ghost" id="mem-q" type="button">Quase</button><button class="btn" id="mem-l" type="button">Lembrei</button></div>'
+            : '<div class="actions"><button class="btn" id="mem-flip" type="button">Mostrar resposta</button><button class="btn ghost" id="mem-exit" type="button">Sair</button></div>');
+      } else {
+        if (!it.opts) {
+          var others = shuffle(memAll().filter(function (x) { return x.temas.indexOf(it.tema) < 0; })).slice(0, 3);
+          it.opts = shuffle([c.titulo].concat(others.map(function (x) { return x.titulo; }))); it.ok = c.titulo;
+        }
+        h = '<p class="hint">Qual referência eu uso? · restam ' + left + '</p><div class="scroll plain"><h3>Tema: ' + esc(THEMES[it.tema]) + '</h3><p>Qual destas referências serve para esse tema?</p></div><div class="optlist">' +
+          it.opts.map(function (o, i) { return '<button type="button" class="opt" data-mo="' + i + '" aria-pressed="' + (it.sel === i ? 'true' : 'false') + '"' + (it.answered ? ' disabled' : '') + '><span class="kb">' + (i + 1) + '</span>' + esc(o) + '</button>'; }).join('') + '</div>';
+        if (!it.answered) h += '<div class="actions"><button class="btn ghost" id="mem-exit" type="button">Sair</button></div>';
+        if (it.answered) h += '<p class="' + (it.sel != null && it.opts[it.sel] === it.ok ? 'tag-ok' : 'tag-bad') + '">' + (it.opts[it.sel] === it.ok ? 'Certo!' : 'Era: ' + esc(it.ok)) + '</p><div class="scroll plain"><p>' + esc(c.conecta[it.tema]) + '</p></div><div class="actions"><button class="btn" id="mem-next" type="button">Próximo</button></div>';
+      }
+    }
+    el.innerHTML = h;
+  }
+  function openMem() { mv = null; renderMem(); show('mem'); }
+  function memStart() {
+    var q = memBuild();
+    if (!q.length) { renderMem(); $('memmsg').textContent = 'Nada para revisar agora. Volte amanhã ou adicione mais referências no Cofre de coringas.'; return; }
+    $('memmsg').textContent = '';
+    mv = { view: 'session', q: q, flip: false, done: false, res: { l: 0, q: 0, e: 0, coins: 0 } };
+    renderMem();
+  }
+  function memAdvance() {
+    mv.flip = false;
+    if (!mv.q.length) { mv.done = true; persist(); updHud(); }
+    renderMem();
+  }
+  function memGrade(g) {
+    var it = mv.q.shift(), s = save.mem.st[it.id] || (save.mem.st[it.id] = { box: 0, due: 0 });
+    if (g === 'f') { s.box = 1; s.due = Date.now(); mv.q.push({ id: it.id, k: 'recall', retry: true }); mv.res.e++; }
+    else if (g === 'q') { s.box = Math.max(1, s.box); s.due = Date.now() + DAY; mv.res.q++; }
+    else {
+      if (it.retry) { s.box = 1; s.due = Date.now() + DAY; } else { s.box = Math.min(5, s.box + 1); s.due = Date.now() + MEMBOX[s.box] * DAY; }
+      mv.res.l++; mv.res.coins += 2; save.coins += 2;
+    }
+    persist(); memAdvance();
+  }
+  function memLearned() {
+    var it = mv.q.shift();
+    save.mem.st[it.id] = save.mem.st[it.id] || { box: 0, due: 0 };
+    save.mem.newN++;
+    mv.q.push({ id: it.id, k: 'recall' });
+    persist(); memAdvance();
+  }
+  function memPick(i) {
+    var it = mv.q[0];
+    if (!it || it.k !== 'reverse' || it.answered) return;
+    it.sel = i; it.answered = true;
+    var s = save.mem.st[it.id];
+    if (it.opts[i] === it.ok) { save.coins += 1; mv.res.coins += 1; mv.res.l++; }
+    else { mv.res.e++; if (s) { s.box = Math.max(1, s.box - 1); s.due = Date.now(); } }
+    persist(); renderMem();
+  }
+
   /* ---------- eventos ---------- */
   $('realms').addEventListener('click', function (e) {
     var b = e.target.closest('.realm');
@@ -2296,6 +2564,27 @@ select, input[type="number"] { font: 500 16px/1.3 var(--f-text); color: var(--te
     copyText(coriRequest()).then(function () { $('corimsg').textContent = 'Pedido copiado. Cole no Claude e traga a resposta em JSON para o campo abaixo.'; }, function () { $('corimsg').textContent = 'Não consegui copiar sozinho.'; });
   });
   $('coriadd').addEventListener('click', addCori);
+
+  $('mmem').addEventListener('click', openMem);
+  $('memback').addEventListener('click', toMenu);
+  $('memstart').addEventListener('click', memStart);
+  $('memmap').addEventListener('click', function () { mv = { view: 'map', tema: 0 }; renderMem(); });
+  $('memview').addEventListener('click', function (e) {
+    var t = e.target.closest('button');
+    if (!t || !mv) return;
+    var id = t.id;
+    if (id === 'mem-exit') { mv = null; renderMem(); }
+    else if (id === 'mem-flip') { mv.flip = true; renderMem(); }
+    else if (id === 'mem-f') memGrade('f');
+    else if (id === 'mem-q') memGrade('q');
+    else if (id === 'mem-l') memGrade('l');
+    else if (id === 'mem-got') memLearned();
+    else if (id === 'mem-next') { mv.q.shift(); memAdvance(); }
+    else if (t.hasAttribute('data-mo')) memPick(+t.getAttribute('data-mo'));
+  });
+  $('memview').addEventListener('change', function (e) {
+    if (mv && mv.view === 'map' && e.target.id === 'memtsel') { mv.tema = +e.target.value; renderMem(); }
+  });
 
   /* ---------- desenho ---------- */
   var cv = $('cv'), cx = cv.getContext('2d'), DPR = Math.min(2, window.devicePixelRatio || 1);
